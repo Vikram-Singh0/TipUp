@@ -10,12 +10,21 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Footer } from "@/components/pushflow/footer";
+import {
+  PushUniversalWalletProvider,
+  PushUniversalAccountButton,
+  PushUI,
+} from "@pushchain/ui-kit";
 
 const Coin3DLogo = dynamic(() => import("@/components/pushflow/coin-3d-logo"), {
   ssr: false,
 });
 
 export default function Page() {
+  // Define Wallet Config
+  const walletConfig = {
+    network: PushUI.CONSTANTS.PUSH_NETWORK.TESTNET,
+  };
   return (
     <main className="min-h-screen relative overflow-hidden">
       {/* Background gradient + subtle orbs */}
@@ -30,12 +39,9 @@ export default function Page() {
             <span className="font-semibold tracking-tight">TipUp</span>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              variant="secondary"
-              className="bg-[var(--push-card)] hover:bg-[var(--push-card-hover)]"
-            >
-              Connect Push Wallet
-            </Button>
+            <PushUniversalWalletProvider config={walletConfig}>
+              <PushUniversalAccountButton />
+            </PushUniversalWalletProvider>
             <ThemeToggle />
           </div>
         </div>
@@ -56,13 +62,13 @@ export default function Page() {
           </p>
           <div className="flex items-center gap-3">
             <Button className="px-6 py-6 text-base font-medium bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)] shadow-[0_0_32px_var(--push-pink-500-20)]">
-              <Link href="/tip">Start Tipping</Link>
+              <Link href="/dashboard">� For Creators</Link>
             </Button>
             <Button
               variant="outline"
               className="px-6 py-6 text-base bg-transparent"
             >
-              <Link href="/dashboard">For Creators</Link>
+              <Link href="/tip/universal">❤️ For Supporters</Link>
             </Button>
           </div>
 
@@ -85,8 +91,117 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Feature Links grid */}
+      {/* How it works flows */}
       <section className="px-12 pb-12">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-semibold mb-4">How TipUp Works</h2>
+          <p className="text-muted-foreground">
+            Simple, fast, and secure tipping for everyone
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          {/* Creator Flow */}
+          <div className="bg-card/40 backdrop-blur rounded-2xl p-6 border border-border/60">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <span className="text-2xl">🎨</span>
+              For Creators
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--push-pink-500)] text-white flex items-center justify-center text-sm font-bold">
+                  1
+                </div>
+                <div>
+                  <p className="font-medium">Create Your Profile</p>
+                  <p className="text-sm text-muted-foreground">
+                    Register with ENS name, add description and social links
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--push-pink-500)] text-white flex items-center justify-center text-sm font-bold">
+                  2
+                </div>
+                <div>
+                  <p className="font-medium">Get Your Unique Link & QR Code</p>
+                  <p className="text-sm text-muted-foreground">
+                    Share your tipup.app/tip/yourname.eth link with supporters
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--push-pink-500)] text-white flex items-center justify-center text-sm font-bold">
+                  3
+                </div>
+                <div>
+                  <p className="font-medium">Track Tips & Analytics</p>
+                  <p className="text-sm text-muted-foreground">
+                    View earnings, supporter count, and manage your profile
+                  </p>
+                </div>
+              </div>
+            </div>
+            <Link href="/dashboard" className="inline-block mt-4">
+              <Button className="bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]">
+                Start Creating →
+              </Button>
+            </Link>
+          </div>
+
+          {/* Supporter Flow */}
+          <div className="bg-card/40 backdrop-blur rounded-2xl p-6 border border-border/60">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <span className="text-2xl">❤️</span>
+              For Supporters
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--push-purple-500)] text-white flex items-center justify-center text-sm font-bold">
+                  1
+                </div>
+                <div>
+                  <p className="font-medium">Find Your Favorite Creator</p>
+                  <p className="text-sm text-muted-foreground">
+                    Click their tip link or paste it in Universal Tipping
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--push-purple-500)] text-white flex items-center justify-center text-sm font-bold">
+                  2
+                </div>
+                <div>
+                  <p className="font-medium">Connect Push Wallet</p>
+                  <p className="text-sm text-muted-foreground">
+                    Use any wallet - supports all chains seamlessly
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--push-purple-500)] text-white flex items-center justify-center text-sm font-bold">
+                  3
+                </div>
+                <div>
+                  <p className="font-medium">Send Tips Instantly</p>
+                  <p className="text-sm text-muted-foreground">
+                    Choose amount, add message, and tip directly to creator
+                  </p>
+                </div>
+              </div>
+            </div>
+            <Link href="/tip/universal" className="inline-block mt-4">
+              <Button
+                variant="outline"
+                className="border-[var(--push-purple-500)] text-[var(--push-purple-500)] hover:bg-[var(--push-purple-500)] hover:text-white"
+              >
+                Start Tipping →
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Feature Links grid */}
         <div className="grid md:grid-cols-4 gap-4">
           <Link href="/dashboard" className="group">
             <div className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur p-5 h-full transition-colors">
@@ -105,16 +220,16 @@ export default function Page() {
             </div>
           </Link>
 
-          <Link href="/tip" className="group">
+          <Link href="/tip/universal" className="group">
             <div className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur p-5 h-full">
               <motion.h3
                 className="text-base font-semibold mb-1"
                 whileHover={{ y: -2 }}
               >
-                Tip Interface
+                Universal Tipping
               </motion.h3>
               <p className="text-sm text-muted-foreground">
-                Send tips in ETH, MATIC, USDC
+                Paste any creator link and tip instantly
               </p>
               <div className="mt-4 text-xs text-[var(--push-pink-500)] group-hover:underline">
                 Start Tipping →

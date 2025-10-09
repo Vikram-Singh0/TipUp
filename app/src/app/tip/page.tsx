@@ -1,49 +1,73 @@
-"use client"
+"use client";
 
-import dynamic from "next/dynamic"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-
-const Coin3D = dynamic(() => import("@/components/pushflow/coin-3d"), { ssr: false })
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function TipPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirect to universal tipping after a short delay
+    const timer = setTimeout(() => {
+      router.push("/tip/universal");
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [router]);
+
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 space-y-8">
-      <header className="space-y-1">
-        <h1 className="text-3xl md:text-4xl font-semibold">Tip @creator.eth</h1>
-        <p className="text-muted-foreground">Support your favorite creator in seconds.</p>
-      </header>
-
-      <div className="grid md:grid-cols-2 gap-8 items-center">
-        <div className="rounded-3xl bg-[radial-gradient(60%_60%_at_50%_40%,var(--push-pink-500)/20,transparent)] p-4">
-          <Coin3D scale={0.9} />
-        </div>
-
-        <Card className="bg-card/50 backdrop-blur">
-          <CardHeader>
-            <CardTitle>Send a Tip</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-[1fr_auto] gap-3">
-              <input
-                className="h-11 rounded-md bg-background/60 border border-border px-3"
-                placeholder="Enter amount"
-              />
-              <select className="h-11 rounded-md bg-background/60 border border-border px-3">
-                <option>ETH</option>
-                <option>MATIC</option>
-                <option>USDC</option>
-              </select>
+      <Card className="bg-card/50 backdrop-blur">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] text-white text-2xl mb-4">
+              🔍
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <input id="with-msg" type="checkbox" className="accent-[var(--push-pink-500)]" />
-              <label htmlFor="with-msg">Send message with tip</label>
+            <h1 className="text-2xl font-semibold">
+              Looking for a Creator to Tip?
+            </h1>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              You&apos;ll need a creator&apos;s link, ENS name, or wallet
+              address to send them a tip.
+            </p>
+
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                <p>
+                  ✨ <strong>Examples:</strong>
+                </p>
+                <ul className="list-none space-y-1 mt-2">
+                  <li>• tipup.app/tip/creator.eth</li>
+                  <li>• creator.eth</li>
+                  <li>• 0x742d35Cc6634C0532925a3b8D404fddE9C...</li>
+                </ul>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button
+                  asChild
+                  className="bg-[var(--push-purple-500)] hover:bg-[var(--push-purple-600)]"
+                >
+                  <Link href="/tip/universal">🌍 Universal Tipping</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/dashboard">🎨 Register as Creator</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/">🏠 Go Home</Link>
+                </Button>
+              </div>
             </div>
-            <Button className="w-full bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]">Push Tip</Button>
-            <p className="text-xs text-muted-foreground">You’ll receive an instant Push notification.</p>
-          </CardContent>
-        </Card>
-      </div>
+
+            <div className="text-xs text-muted-foreground">
+              Redirecting to Universal Tipping in 3 seconds...
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </main>
-  )
+  );
 }

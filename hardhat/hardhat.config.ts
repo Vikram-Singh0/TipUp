@@ -8,15 +8,23 @@ const config: HardhatUserConfig = {
   solidity: {
     profiles: {
       default: {
-        version: "0.8.28",
-      },
-      production: {
-        version: "0.8.28",
+        version: "0.8.19",
         settings: {
           optimizer: {
             enabled: true,
             runs: 200,
           },
+          viaIR: true,
+        },
+      },
+      production: {
+        version: "0.8.19",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+          viaIR: true,
         },
       },
     },
@@ -35,6 +43,13 @@ const config: HardhatUserConfig = {
       chainType: "l1",
       url: configVariable("SEPOLIA_RPC_URL"),
       accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+    },
+    pushTestnet: {
+      type: "http",
+      chainType: "l1",
+      url: "https://evm.rpc-testnet-donut-node2.push.org/",
+      chainId: 42101,
+      accounts: [configVariable("PRIVATE_KEY")],
     },
   },
 };

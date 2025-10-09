@@ -1,19 +1,22 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
+import Link from "next/link";
 
 const steps = [
   { title: "Connect Push Wallet", desc: "One universal App across chains." },
   { title: "Verify Creator ENS", desc: "Link your identity. Build trust." },
   { title: "Send a Tip", desc: "ETH, MATIC, USDC and more." },
   { title: "Instant Alerts", desc: "Real-time Push notifications." },
-]
+];
 
 export function HowItWorks() {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-28">
       {/* Larger heading for landing */}
-      <h2 className="text-3xl md:text-4xl font-semibold mb-6 text-balance">How It Works</h2>
+      <h2 className="text-3xl md:text-4xl font-semibold mb-6 text-balance">
+        How It Works
+      </h2>
 
       {/* Bigger card, add group perspective and subtle tilt on hover */}
       <motion.div
@@ -37,7 +40,12 @@ export function HowItWorks() {
                   initial={{ opacity: 0, y: 18 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-90px" }}
-                  transition={{ delay: 0.06 + i * 0.07, type: "spring", stiffness: 260, damping: 22 }}
+                  transition={{
+                    delay: 0.06 + i * 0.07,
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 22,
+                  }}
                   whileHover={{
                     y: -8,
                     rotateX: 5,
@@ -45,8 +53,12 @@ export function HowItWorks() {
                     boxShadow: "0 0 72px var(--push-pink-500-20)",
                   }}
                 >
-                  <div className="text-xs uppercase opacity-90 tracking-wide mb-2">Step {i + 1}</div>
-                  <div className="text-base md:text-lg font-semibold mb-1">{s.title}</div>
+                  <div className="text-xs uppercase opacity-90 tracking-wide mb-2">
+                    Step {i + 1}
+                  </div>
+                  <div className="text-base md:text-lg font-semibold mb-1">
+                    {s.title}
+                  </div>
                   <div className="text-sm opacity-90">{s.desc}</div>
                 </motion.div>
               ))}
@@ -54,12 +66,12 @@ export function HowItWorks() {
 
             {/* CTA row expanded */}
             <div className="mt-10 flex flex-col sm:flex-row gap-3">
-              <a
+              <Link
                 href="/tip"
                 className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium bg-[var(--push-white)] text-[var(--push-bg)] hover:opacity-90 transition-opacity"
               >
                 Start Tipping
-              </a>
+              </Link>
               <a
                 href="/dashboard"
                 className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium border border-[var(--push-white)]/30 text-[var(--push-white)] hover:bg-[var(--push-white)]/10 transition-colors"
@@ -80,5 +92,5 @@ export function HowItWorks() {
         <div className="pointer-events-none absolute -inset-16 blur-3xl opacity-30 bg-[radial-gradient(40%_40%_at_80%_10%,white,transparent)]" />
       </motion.div>
     </section>
-  )
+  );
 }

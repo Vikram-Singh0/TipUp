@@ -1,71 +1,821 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  PushUniversalWalletProvider,
+  PushUniversalAccountButton,
+  PushUI,
+} from "@pushchain/ui-kit";
+import { ethers } from "ethers";
+import Link from "next/link";
+import Image from "next/image";
+import CreatorRegistrationForm, {
+  type CreatorFormData,
+} from "@/components/creator/registration-form";
+import CreatorAnalytics from "@/components/creator/analytics";
+import {
+  CONTRACT_CONFIG,
+  TIPUP_ABI,
+  type Creator,
+  type Tip,
+} from "@/config/contract";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  generateProfileLink,
+  generateQRCode,
+  copyToClipboard,
+} from "@/lib/profile-utils";
+import {
+  Copy,
+  ExternalLink,
+  QrCode,
+  Edit,
+  Eye,
+  TrendingUp,
+  Users,
+  DollarSign,
+  BarChart3,
+  Settings,
+  Sparkles,
+} from "lucide-react";
 
-export default function CreatorDashboardPage() {
+export default function DashboardPage() {
+  const [isConnected, setIsConnected] = useState(false);
+  const [userAddress, setUserAddress] = useState<string>("");
+  const [creator, setCreator] = useState<Creator | null>(null);
+  const [userTips, setUserTips] = useState<Tip[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "analytics" | "settings"
+  >("overview");
+
+  // Contract configuration
+  const contractAddress = CONTRACT_CONFIG.TIPUP_CONTRACT;
+  const pushRpcUrl = CONTRACT_CONFIG.PUSH_RPC_URL;
+
+  // Wallet configuration
+  const walletConfig = {
+    network: PushUI.CONSTANTS.PUSH_NETWORK.TESTNET,
+  };
+
+  // Check wallet connection status
+  useEffect(() => {
+    const checkWalletConnection = async () => {
+      try {
+        if (window.ethereum) {
+          const accounts = (await window.ethereum.request({
+            method: "eth_accounts",
+          })) as string[];
+          if (accounts.length > 0) {
+            setIsConnected(true);
+            setUserAddress(accounts[0]);
+          } else {
+            setIsConnected(false);
+            setUserAddress("");
+          }
+        }
+      } catch (error) {
+        console.error("Error checking wallet connection:", error);
+      }
+    };
+
+    checkWalletConnection();
+
+    // Listen for account changes
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (...args: unknown[]) => {
+        const accounts = args[0] as string[];
+        if (accounts.length > 0) {
+          setIsConnected(true);
+          setUserAddress(accounts[0]);
+        } else {
+          setIsConnected(false);
+          setUserAddress("");
+        }
+      });
+    }
+
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener("accountsChanged", () => {});
+      }
+    };
+  }, []);
+
+  const fetchCreatorInfo = useCallback(async () => {
+    try {
+      const provider = new ethers.JsonRpcProvider(pushRpcUrl);
+      const contract = new ethers.Contract(
+        contractAddress,
+        TIPUP_ABI,
+        provider
+      );
+
+      const isRegistered = await contract.isCreatorRegisteredByAddress(
+        userAddress
+      );
+      if (isRegistered) {
+        const creatorData = await contract.getCreatorByAddress(userAddress);
+        const creatorInfo: Creator = {
+          wallet: creatorData.wallet,
+          ensName: creatorData.ensName,
+          totalTips: creatorData.totalTips,
+          tipCount: creatorData.tipCount,
+          isRegistered: creatorData.isRegistered,
+          displayName: creatorData.displayName,
+          profileMessage: creatorData.profileMessage,
+          avatarUrl: creatorData.avatarUrl,
+          websiteUrl: creatorData.websiteUrl,
+          twitterHandle: creatorData.twitterHandle,
+          instagramHandle: creatorData.instagramHandle,
+          youtubeHandle: creatorData.youtubeHandle,
+          discordHandle: creatorData.discordHandle,
+          registrationTime: creatorData.registrationTime,
+        };
+        setCreator(creatorInfo);
+
+        // Generate QR code for the profile link
+        const profileLink = generateProfileLink(creatorInfo.ensName);
+        const qrCode = await generateQRCode(profileLink);
+        setQrCodeUrl(qrCode);
+      }
+    } catch (error) {
+      console.error("Error fetching creator info:", error);
+    }
+  }, [userAddress, contractAddress, pushRpcUrl]);
+
+  const fetchUserTips = useCallback(async () => {
+    try {
+      const provider = new ethers.JsonRpcProvider(pushRpcUrl);
+      const contract = new ethers.Contract(
+        contractAddress,
+        TIPUP_ABI,
+        provider
+      );
+
+      const tips = await contract.getUserTips(userAddress);
+      setUserTips(tips);
+    } catch (error) {
+      console.error("Error fetching user tips:", error);
+    }
+  }, [userAddress, contractAddress, pushRpcUrl]);
+
+  useEffect(() => {
+    if (userAddress) {
+      fetchCreatorInfo();
+      fetchUserTips();
+    }
+  }, [userAddress, fetchCreatorInfo, fetchUserTips]);
+
+  const handleRegisterCreator = async (formData: CreatorFormData) => {
+    if (!isConnected) {
+      setError("Please connect your wallet");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      if (!window.ethereum) {
+        throw new Error("MetaMask or another Web3 wallet is required");
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(contractAddress, TIPUP_ABI, signer);
+
+      const tx = await contract.registerCreator(
+        formData.ensName,
+        formData.displayName,
+        formData.profileMessage,
+        formData.avatarUrl,
+        formData.websiteUrl,
+        formData.twitterHandle,
+        formData.instagramHandle,
+        formData.youtubeHandle,
+        formData.discordHandle
+      );
+
+      setSuccess(`Registration transaction sent! Hash: ${tx.hash}`);
+
+      await tx.wait();
+      setSuccess(`✅ Successfully registered as ${formData.ensName}!`);
+
+      // Refresh creator info
+      await fetchCreatorInfo();
+    } catch (error: unknown) {
+      console.error("Error registering creator:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to register creator"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateCreator = async (formData: CreatorFormData) => {
+    if (!isConnected) {
+      setError("Please connect your wallet");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      if (!window.ethereum) {
+        throw new Error("MetaMask or another Web3 wallet is required");
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(contractAddress, TIPUP_ABI, signer);
+
+      const tx = await contract.updateCreatorProfile(
+        formData.displayName,
+        formData.profileMessage,
+        formData.avatarUrl,
+        formData.websiteUrl,
+        formData.twitterHandle,
+        formData.instagramHandle,
+        formData.youtubeHandle,
+        formData.discordHandle
+      );
+
+      setSuccess(`Profile update transaction sent! Hash: ${tx.hash}`);
+
+      await tx.wait();
+      setSuccess(`✅ Successfully updated profile!`);
+      setIsEditing(false);
+
+      // Refresh creator info
+      await fetchCreatorInfo();
+    } catch (error: unknown) {
+      console.error("Error updating creator:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to update profile"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!creator) return;
+
+    const profileLink = generateProfileLink(creator.ensName);
+    const success = await copyToClipboard(profileLink);
+    if (success) {
+      setSuccess("Profile link copied to clipboard!");
+    } else {
+      setError("Failed to copy link to clipboard");
+    }
+  };
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const formatTimestamp = (timestamp: bigint) => {
+    return new Date(Number(timestamp) * 1000).toLocaleDateString();
+  };
+
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 space-y-8">
-      <header className="space-y-1">
-        <h1 className="text-3xl md:text-4xl font-semibold">Creator Dashboard</h1>
-        <p className="text-muted-foreground">Manage your profile, tips, and broadcasts.</p>
-      </header>
+    <PushUniversalWalletProvider config={walletConfig}>
+      <main className="mx-auto max-w-6xl px-4 py-10 space-y-8">
+        <header className="space-y-1">
+          <h1 className="text-3xl md:text-4xl font-semibold">
+            Creator Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Manage your profile and track your tips
+          </p>
+        </header>
+        {/* Wallet Connection */}
+        <div className="flex justify-center">
+          <PushUniversalAccountButton />
+        </div>
+        {!isConnected ? (
+          <Card className="bg-card/50 backdrop-blur">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <h3 className="text-xl font-semibold">Connect Your Wallet</h3>
+                <p className="text-muted-foreground">
+                  Connect your wallet to access the creator dashboard
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : !creator ? (
+          // Registration Form
+          <div className="max-w-2xl mx-auto">
+            <CreatorRegistrationForm
+              onSubmit={handleRegisterCreator}
+              isLoading={isLoading}
+              error={error}
+              success={success}
+            />
+          </div>
+        ) : isEditing ? (
+          // Edit Profile Form
+          <div className="max-w-2xl mx-auto">
+            <CreatorRegistrationForm
+              onSubmit={handleUpdateCreator}
+              isLoading={isLoading}
+              error={error}
+              success={success}
+            />
+            <div className="text-center mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsEditing(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          // Creator Dashboard
+          <div className="space-y-6">
+            {/* Tab Navigation */}
+            <div className="flex justify-center">
+              <div className="flex space-x-1 bg-card/50 backdrop-blur rounded-lg p-1">
+                <button
+                  onClick={() => setActiveTab("overview")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "overview"
+                      ? "bg-[var(--push-pink-500)] text-white"
+                      : "hover:bg-card"
+                  }`}
+                >
+                  <Eye className="w-4 h-4" />
+                  Overview
+                </button>
+                <button
+                  onClick={() => setActiveTab("analytics")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "analytics"
+                      ? "bg-[var(--push-pink-500)] text-white"
+                      : "hover:bg-card"
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  Analytics
+                </button>
+                <button
+                  onClick={() => setActiveTab("settings")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "settings"
+                      ? "bg-[var(--push-pink-500)] text-white"
+                      : "hover:bg-card"
+                  }`}
+                >
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </button>
+              </div>
+            </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card className="bg-card/50 backdrop-blur">
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Display Name</Label>
-              <Input placeholder="e.g. Vikram" />
+            {/* Tab Content */}
+            {activeTab === "overview" && (
+              <div className="grid gap-6">
+                {/* Profile Overview */}
+                <Card className="bg-card/50 backdrop-blur">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center space-x-4">
+                        {creator.avatarUrl ? (
+                          <Image
+                            src={creator.avatarUrl}
+                            alt={creator.displayName}
+                            width={64}
+                            height={64}
+                            className="w-16 h-16 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] flex items-center justify-center text-white text-xl font-bold">
+                            {creator.displayName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <CardTitle className="text-2xl">
+                            {creator.displayName}
+                          </CardTitle>
+                          <p className="text-muted-foreground">
+                            @{creator.ensName}
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {creator.profileMessage}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditing(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit Profile
+                      </Button>
+                    </div>
+                  </CardHeader>
+                </Card>
+
+                {/* Stats Grid */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Card className="bg-card/50 backdrop-blur">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center space-x-2">
+                        <DollarSign className="w-5 h-5 text-[var(--push-pink-500)]" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Total Tips
+                          </p>
+                          <p className="text-2xl font-bold text-[var(--push-pink-500)]">
+                            {ethers.formatEther(creator.totalTips)} ETH
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card/50 backdrop-blur">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-5 h-5 text-[var(--push-purple-500)]" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Supporters
+                          </p>
+                          <p className="text-2xl font-bold text-[var(--push-purple-500)]">
+                            {creator.tipCount.toString()}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card/50 backdrop-blur">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className="w-5 h-5 text-green-500" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Avg Tip
+                          </p>
+                          <p className="text-2xl font-bold text-green-500">
+                            {creator.tipCount > 0
+                              ? Number(
+                                  ethers.formatEther(
+                                    creator.totalTips / creator.tipCount
+                                  )
+                                ).toFixed(4)
+                              : "0"}{" "}
+                            ETH
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Profile Link & QR Code - Enhanced */}
+                <Card className="bg-gradient-to-br from-[var(--push-pink-500)]/10 to-[var(--push-purple-500)]/10 backdrop-blur border-[var(--push-pink-500)]/20">
+                  <CardHeader className="text-center">
+                    <CardTitle className="flex items-center justify-center gap-2 text-xl">
+                      <QrCode className="w-6 h-6 text-[var(--push-pink-500)]" />
+                      Share Your Tip Link
+                    </CardTitle>
+                    <p className="text-muted-foreground">
+                      Share this link and QR code with your supporters to
+                      receive tips
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Link with prominent copy button */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Your Unique Tip Link
+                      </Label>
+                      <div className="flex items-center space-x-2 p-2 bg-card/50 rounded-lg">
+                        <Input
+                          value={generateProfileLink(creator.ensName)}
+                          readOnly
+                          className="flex-1 border-0 bg-transparent focus-visible:ring-0"
+                        />
+                        <Button
+                          onClick={handleCopyLink}
+                          size="sm"
+                          className="bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]"
+                        >
+                          <Copy className="w-4 h-4 mr-1" />
+                          Copy
+                        </Button>
+                        <Button asChild size="sm" variant="outline">
+                          <Link
+                            href={`/tip/${creator.ensName}`}
+                            target="_blank"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-1" />
+                            Test
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* QR Code with download option */}
+                    {qrCodeUrl && (
+                      <div className="space-y-4">
+                        <Label className="text-sm font-medium text-center block">
+                          QR Code
+                        </Label>
+                        <div className="flex justify-center">
+                          <div className="p-6 bg-white rounded-2xl shadow-lg">
+                            <Image
+                              src={qrCodeUrl}
+                              alt="QR Code for Tip Link"
+                              width={192}
+                              height={192}
+                              className="w-48 h-48"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const link = document.createElement("a");
+                              link.download = `tipup-qr-${creator.ensName}.png`;
+                              link.href = qrCodeUrl;
+                              link.click();
+                            }}
+                          >
+                            📥 Download QR
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              if (navigator.share) {
+                                navigator.share({
+                                  title: `Tip ${creator.displayName}`,
+                                  text: `Support ${creator.displayName} with tips!`,
+                                  url: generateProfileLink(creator.ensName),
+                                });
+                              }
+                            }}
+                          >
+                            📤 Share
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Social sharing suggestions */}
+                    <div className="p-4 bg-card/30 rounded-lg">
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-[var(--push-pink-500)]" />
+                        Sharing Tips
+                      </h4>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>• Add the QR code to your social media bio</li>
+                        <li>• Include the link in video descriptions</li>
+                        <li>
+                          • Share on Twitter, Discord, or Instagram stories
+                        </li>
+                        <li>• Print the QR code for offline events</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Social Links */}
+                {(creator.websiteUrl ||
+                  creator.twitterHandle ||
+                  creator.instagramHandle ||
+                  creator.youtubeHandle ||
+                  creator.discordHandle) && (
+                  <Card className="bg-card/50 backdrop-blur">
+                    <CardHeader>
+                      <CardTitle>Social Links</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {creator.websiteUrl && (
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            <a
+                              href={creator.websiteUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Website
+                            </a>
+                          </Badge>
+                        )}
+                        {creator.twitterHandle && (
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1"
+                          >
+                            @{creator.twitterHandle}
+                          </Badge>
+                        )}
+                        {creator.instagramHandle && (
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1"
+                          >
+                            @{creator.instagramHandle}
+                          </Badge>
+                        )}
+                        {creator.youtubeHandle && (
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1"
+                          >
+                            @{creator.youtubeHandle}
+                          </Badge>
+                        )}
+                        {creator.discordHandle && (
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1"
+                          >
+                            {creator.discordHandle}
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Recent Tips */}
+                <Card className="bg-card/50 backdrop-blur">
+                  <CardHeader>
+                    <CardTitle>Recent Tips</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {userTips.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-8">
+                        <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>No tips received yet</p>
+                        <p className="text-sm">
+                          Share your profile link to start receiving tips!
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {userTips.slice(0, 10).map((tip, index) => (
+                          <div key={index} className="border rounded-lg p-3">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-medium">
+                                  {ethers.formatEther(tip.amount)} ETH
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  From: {formatAddress(tip.from)}
+                                </div>
+                                {tip.message && (
+                                  <div className="text-sm mt-1 italic">
+                                    &ldquo;{tip.message}&rdquo;
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {formatTimestamp(tip.timestamp)}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Analytics Tab */}
+            {activeTab === "analytics" && (
+              <CreatorAnalytics tips={userTips} />
+            )}
+
+            {/* Settings Tab */}
+            {activeTab === "settings" && (
+              <div className="grid gap-6 max-w-2xl mx-auto">
+                <Card className="bg-card/50 backdrop-blur">
+                  <CardHeader>
+                    <CardTitle>Profile Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      className="w-full bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-card/50 backdrop-blur">
+                  <CardHeader>
+                    <CardTitle>Notification Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Push Notifications</p>
+                        <p className="text-sm text-muted-foreground">
+                          Receive notifications when you get tips
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Enable
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Email Notifications</p>
+                        <p className="text-sm text-muted-foreground">
+                          Get weekly summaries via email
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Configure
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-card/50 backdrop-blur">
+                  <CardHeader>
+                    <CardTitle>Advanced</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Export Data</p>
+                        <p className="text-sm text-muted-foreground">
+                          Download your tip history as CSV
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Export
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        )}{" "}
+        {/* Status Messages */}
+        {(error || success) && (
+          <div className="fixed bottom-4 right-4 z-50 space-y-2">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg shadow-lg">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-lg shadow-lg">
+                {success}
+              </div>
+            )}
+          </div>
+        )}
+        {/* Network Info */}
+        <Card className="bg-card/30 backdrop-blur">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-2">
+              <div className="text-sm font-medium">
+                Network: Push Chain Testnet
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Chain ID: 999 • Fast & Low-cost transactions
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>ENS Name</Label>
-              <Input placeholder="@creator.eth" />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea placeholder="Tell fans about your work" />
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <Input placeholder="Twitter" />
-              <Input placeholder="GitHub" />
-              <Input placeholder="Website" />
-            </div>
-            <Button className="bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]">Save</Button>
           </CardContent>
         </Card>
-
-        <Card className="bg-card/50 backdrop-blur">
-          <CardHeader>
-            <CardTitle>Stats</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <motion.div
-              whileInView={{ y: 0, opacity: 1 }}
-              initial={{ y: 8, opacity: 0 }}
-              className="rounded-xl border border-border/60 p-4"
-            >
-              <div className="text-sm text-muted-foreground">Total Tips</div>
-              <div className="text-2xl font-semibold">$420.50</div>
-            </motion.div>
-            <motion.div
-              whileInView={{ y: 0, opacity: 1 }}
-              initial={{ y: 8, opacity: 0 }}
-              className="rounded-xl border border-border/60 p-4"
-            >
-              <div className="text-sm text-muted-foreground">Followers Tipped</div>
-              <div className="text-2xl font-semibold">128</div>
-            </motion.div>
-          </CardContent>
-        </Card>
-      </div>
-    </main>
-  )
+      </main>
+    </PushUniversalWalletProvider>
+  );
 }
