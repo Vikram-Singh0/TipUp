@@ -29,6 +29,7 @@ import {
   generateQRCode,
   copyToClipboard,
 } from "@/lib/profile-utils";
+import { useWalletConnection } from "@/hooks/useWalletConnection";
 import {
   Copy,
   ExternalLink,
@@ -41,14 +42,20 @@ import {
   BarChart3,
   Settings,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 
 export default function DashboardPage() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [userAddress, setUserAddress] = useState<string>("");
+  const {
+    isConnected,
+    address: userAddress,
+    isLoading: walletLoading,
+    error: walletError,
+  } = useWalletConnection();
   const [creator, setCreator] = useState<Creator | null>(null);
   const [userTips, setUserTips] = useState<Tip[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreatorLoading, setIsCreatorLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -66,52 +73,18 @@ export default function DashboardPage() {
     network: PushUI.CONSTANTS.PUSH_NETWORK.TESTNET,
   };
 
-  // Check wallet connection status
+  // Display any wallet errors
   useEffect(() => {
-    const checkWalletConnection = async () => {
-      try {
-        if (window.ethereum) {
-          const accounts = (await window.ethereum.request({
-            method: "eth_accounts",
-          })) as string[];
-          if (accounts.length > 0) {
-            setIsConnected(true);
-            setUserAddress(accounts[0]);
-          } else {
-            setIsConnected(false);
-            setUserAddress("");
-          }
-        }
-      } catch (error) {
-        console.error("Error checking wallet connection:", error);
-      }
-    };
-
-    checkWalletConnection();
-
-    // Listen for account changes
-    if (window.ethereum) {
-      window.ethereum.on("accountsChanged", (...args: unknown[]) => {
-        const accounts = args[0] as string[];
-        if (accounts.length > 0) {
-          setIsConnected(true);
-          setUserAddress(accounts[0]);
-        } else {
-          setIsConnected(false);
-          setUserAddress("");
-        }
-      });
+    if (walletError) {
+      setError(walletError);
     }
-
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener("accountsChanged", () => {});
-      }
-    };
-  }, []);
+  }, [walletError]);
 
   const fetchCreatorInfo = useCallback(async () => {
+    if (!userAddress || !isConnected) return;
+
     try {
+      setIsCreatorLoading(true);
       const provider = new ethers.JsonRpcProvider(pushRpcUrl);
       const contract = new ethers.Contract(
         contractAddress,
@@ -119,11 +92,20 @@ export default function DashboardPage() {
         provider
       );
 
+      console.log(
+        "Checking if creator is registered for address:",
+        userAddress
+      );
       const isRegistered = await contract.isCreatorRegisteredByAddress(
         userAddress
       );
+
+      console.log("Is registered:", isRegistered);
+
       if (isRegistered) {
         const creatorData = await contract.getCreatorByAddress(userAddress);
+        console.log("Creator data:", creatorData);
+
         const creatorInfo: Creator = {
           wallet: creatorData.wallet,
           ensName: creatorData.ensName,
@@ -146,11 +128,17 @@ export default function DashboardPage() {
         const profileLink = generateProfileLink(creatorInfo.ensName);
         const qrCode = await generateQRCode(profileLink);
         setQrCodeUrl(qrCode);
+      } else {
+        setCreator(null);
+        console.log("Creator not registered, showing registration form");
       }
     } catch (error) {
       console.error("Error fetching creator info:", error);
+      setError("Failed to load creator information. Please try again.");
+    } finally {
+      setIsCreatorLoading(false);
     }
-  }, [userAddress, contractAddress, pushRpcUrl]);
+  }, [userAddress, contractAddress, pushRpcUrl, isConnected]);
 
   const fetchUserTips = useCallback(async () => {
     try {
@@ -169,11 +157,18 @@ export default function DashboardPage() {
   }, [userAddress, contractAddress, pushRpcUrl]);
 
   useEffect(() => {
-    if (userAddress) {
+    if (userAddress && isConnected && !walletLoading) {
+      console.log("Wallet connected, fetching creator info for:", userAddress);
       fetchCreatorInfo();
       fetchUserTips();
     }
-  }, [userAddress, fetchCreatorInfo, fetchUserTips]);
+  }, [
+    userAddress,
+    isConnected,
+    walletLoading,
+    fetchCreatorInfo,
+    fetchUserTips,
+  ]);
 
   const handleRegisterCreator = async (formData: CreatorFormData) => {
     if (!isConnected) {
@@ -306,7 +301,27 @@ export default function DashboardPage() {
         <div className="flex justify-center">
           <PushUniversalAccountButton />
         </div>
-        {!isConnected ? (
+        {/* Loading State */}
+        {(walletLoading || isCreatorLoading) && (
+          <Card className="bg-card/50 backdrop-blur">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto" />
+                <h3 className="text-xl font-semibold">
+                  {walletLoading
+                    ? "Connecting Wallet..."
+                    : "Loading Profile..."}
+                </h3>
+                <p className="text-muted-foreground">
+                  {walletLoading
+                    ? "Please wait while we connect to your wallet"
+                    : "Fetching your creator profile information"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        {!isConnected && !walletLoading ? (
           <Card className="bg-card/50 backdrop-blur">
             <CardContent className="pt-6">
               <div className="text-center space-y-4">
@@ -317,7 +332,7 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-        ) : !creator ? (
+        ) : isConnected && !isCreatorLoading && !walletLoading && !creator ? (
           // Registration Form
           <div className="max-w-2xl mx-auto">
             <CreatorRegistrationForm
@@ -346,7 +361,7 @@ export default function DashboardPage() {
               </Button>
             </div>
           </div>
-        ) : (
+        ) : isConnected && !isCreatorLoading && !walletLoading && creator ? (
           // Creator Dashboard
           <div className="space-y-6">
             {/* Tab Navigation */}
@@ -713,9 +728,7 @@ export default function DashboardPage() {
             )}
 
             {/* Analytics Tab */}
-            {activeTab === "analytics" && (
-              <CreatorAnalytics tips={userTips} />
-            )}
+            {activeTab === "analytics" && <CreatorAnalytics tips={userTips} />}
 
             {/* Settings Tab */}
             {activeTab === "settings" && (
@@ -786,7 +799,7 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-        )}{" "}
+        ) : null}{" "}
         {/* Status Messages */}
         {(error || success) && (
           <div className="fixed bottom-4 right-4 z-50 space-y-2">

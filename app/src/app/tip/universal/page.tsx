@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  PushUniversalWalletProvider,
+  PushUniversalAccountButton,
+  PushUI,
+} from "@pushchain/ui-kit";
 import { ethers } from "ethers";
 import { CONTRACT_CONFIG } from "@/config/contract";
-import { useWallet } from "@/contexts/WalletContext";
 
 const Coin3D = dynamic(() => import("@/components/pushflow/coin-3d"), {
   ssr: false,
@@ -63,9 +67,8 @@ interface CreatorContractResponse {
 }
 
 export default function UniversalTipPage() {
-  // Use wallet context
-  const { isConnected, userAddress, signer, connectWallet } = useWallet();
-  
+  const [isConnected, setIsConnected] = useState(false);
+  const [userAddress, setUserAddress] = useState<string>("");
   const [creator, setCreator] = useState<Creator | null>(null);
   const [tipAmount, setTipAmount] = useState("");
   const [tipMessage, setTipMessage] = useState("");
@@ -77,25 +80,61 @@ export default function UniversalTipPage() {
   // Universal tip link input
   const [tipLink, setTipLink] = useState("");
 
-  // Contract configuration - memoized
-  const contractConfig = useMemo(() => ({
-    address: CONTRACT_CONFIG.TIPUP_CONTRACT,
-    rpcUrl: CONTRACT_CONFIG.PUSH_RPC_URL,
-  }), []);
+  // Contract configuration
+  const contractAddress = CONTRACT_CONFIG.TIPUP_CONTRACT;
+  const pushRpcUrl = CONTRACT_CONFIG.PUSH_RPC_URL;
+
+  // Wallet configuration
+  const walletConfig = {
+    network: PushUI.CONSTANTS.PUSH_NETWORK.TESTNET,
+  };
 
   // Quick tip amounts
-  const quickAmounts = useMemo(() => ["0.001", "0.005", "0.01", "0.05", "0.1"], []);
+  const quickAmounts = ["0.001", "0.005", "0.01", "0.05", "0.1"];
 
-  // Clear messages after some time
+  // Check wallet connection status
   useEffect(() => {
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError("");
-        setSuccess("");
-      }, 5000);
-      return () => clearTimeout(timer);
+    const checkWalletConnection = async () => {
+      try {
+        if (window.ethereum) {
+          const accounts = (await window.ethereum.request({
+            method: "eth_accounts",
+          })) as string[];
+          if (accounts.length > 0) {
+            setIsConnected(true);
+            setUserAddress(accounts[0]);
+          } else {
+            setIsConnected(false);
+            setUserAddress("");
+          }
+        }
+      } catch (error) {
+        console.error("Error checking wallet connection:", error);
+      }
+    };
+
+    checkWalletConnection();
+
+    // Listen for account changes
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (...args: unknown[]) => {
+        const accounts = args[0] as string[];
+        if (accounts.length > 0) {
+          setIsConnected(true);
+          setUserAddress(accounts[0]);
+        } else {
+          setIsConnected(false);
+          setUserAddress("");
+        }
+      });
     }
-  }, [error, success]);
+
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener("accountsChanged", () => {});
+      }
+    };
+  }, []);
 
   const parseCreatorInfo = (input: string): { type: string; value: string } => {
     const inputValue = input as string;
@@ -134,9 +173,9 @@ export default function UniversalTipPage() {
     setCreator(null);
 
     try {
-      const provider = new ethers.JsonRpcProvider(contractConfig.rpcUrl);
+      const provider = new ethers.JsonRpcProvider(pushRpcUrl);
       const contract = new ethers.Contract(
-        contractConfig.address,
+        contractAddress,
         TIPUP_ABI,
         provider
       );
@@ -194,7 +233,7 @@ export default function UniversalTipPage() {
   };
 
   const handleTip = async () => {
-    if (!tipAmount || !isConnected || !userAddress || !creator || !signer) {
+    if (!tipAmount || !isConnected || !userAddress || !creator) {
       setError(
         "Please connect your wallet, find a creator, and enter a tip amount"
       );
@@ -211,7 +250,13 @@ export default function UniversalTipPage() {
     setSuccess("");
 
     try {
-      const contract = new ethers.Contract(contractConfig.address, TIPUP_ABI, signer);
+      if (!window.ethereum) {
+        throw new Error("MetaMask or another Web3 wallet is required");
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(contractAddress, TIPUP_ABI, signer);
 
       const tipAmountWei = ethers.parseEther(tipAmount);
 
@@ -305,7 +350,8 @@ export default function UniversalTipPage() {
   };
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10 space-y-8">
+    <PushUniversalWalletProvider config={walletConfig}>
+      <main className="mx-auto max-w-4xl px-4 py-10 space-y-8">
         <header className="space-y-4 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] text-white text-2xl mb-4">
             ❤️
@@ -322,24 +368,7 @@ export default function UniversalTipPage() {
 
         {/* Wallet Connection */}
         <div className="flex justify-center">
-          {!isConnected ? (
-            <Button 
-              onClick={connectWallet}
-              className="bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]"
-            >
-              Connect Wallet
-            </Button>
-          ) : (
-            <div className="flex items-center gap-4 p-4 bg-card/50 backdrop-blur rounded-lg">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <div>
-                <p className="text-sm font-medium">Connected</p>
-                <p className="text-xs text-muted-foreground">
-                  {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
-                </p>
-              </div>
-            </div>
-          )}
+          <PushUniversalAccountButton />
         </div>
 
         {/* Creator Search */}
@@ -642,5 +671,6 @@ export default function UniversalTipPage() {
           </CardContent>
         </Card>
       </main>
+    </PushUniversalWalletProvider>
   );
 }

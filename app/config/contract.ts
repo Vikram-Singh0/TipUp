@@ -9,7 +9,7 @@ export const CONTRACT_CONFIG = {
   PUSH_RPC_URL:
     process.env.NEXT_PUBLIC_PUSH_RPC_URL ||
     "https://evm.rpc-testnet-donut-node2.push.org/",
-  PUSH_CHAIN_ID: process.env.NEXT_PUBLIC_PUSH_CHAIN_ID || "999",
+  PUSH_CHAIN_ID: process.env.NEXT_PUBLIC_PUSH_CHAIN_ID || "42101",
 
   // Push SDK Configuration
   // PUSH_API_KEY: process.env.NEXT_PUBLIC_PUSH_API_KEY || "",
