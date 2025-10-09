@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@pushchain/ui-kit": "^2.0.9",
-    "@pushprotocol/restapi": "^1.7.32",
+    "@pushprotocol/restapi": "1.7.29",
     "@pushprotocol/uiweb": "^1.7.3",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-label": "^2.1.7",
