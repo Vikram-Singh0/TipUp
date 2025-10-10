@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Suspense } from "react";
+import { LoadingProvider } from "@/components/providers/loading-provider";
 
 export const metadata: Metadata = {
   title: "TipUp",
@@ -32,7 +33,7 @@ export default function RootLayout({
             disableTransitionOnChange
             storageKey="pushflow-theme"
           >
-            {children}
+            <LoadingProvider>{children}</LoadingProvider>
           </NextThemesProvider>
         </Suspense>
         <Analytics />
