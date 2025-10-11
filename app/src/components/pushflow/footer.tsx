@@ -35,7 +35,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/tip"
+                  href="/tip/universal"
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
                   Send Tips
@@ -43,18 +43,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/broadcast"
+                  href="/dashboard"
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
-                  Broadcasts
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/wallet"
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Push Wallet
+                  Creator Portal
                 </Link>
               </li>
             </ul>

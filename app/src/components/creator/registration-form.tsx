@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import CoinLoader from "@/components/ui/coin-loader";
 import {
   validateDisplayName,
   validateEnsName,
@@ -474,7 +475,14 @@ export default function CreatorRegistrationForm({
               disabled={isLoading || !isStepValid(1) || !isStepValid(2)}
               className="bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] hover:from-[var(--push-pink-600)] hover:to-[var(--push-purple-600)]"
             >
-              {isLoading ? "Creating Profile..." : "Create Profile"}
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <CoinLoader size={16} />
+                  Creating Profile...
+                </span>
+              ) : (
+                "Create Profile"
+              )}
             </Button>
           )}
         </div>

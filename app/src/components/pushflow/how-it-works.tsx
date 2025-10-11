@@ -67,23 +67,17 @@ export function HowItWorks() {
             {/* CTA row expanded */}
             <div className="mt-10 flex flex-col sm:flex-row gap-3">
               <Link
-                href="/tip"
+                href="/tip/universal"
                 className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium bg-[var(--push-white)] text-[var(--push-bg)] hover:opacity-90 transition-opacity"
               >
                 Start Tipping
               </Link>
-              <a
+              <Link
                 href="/dashboard"
                 className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium border border-[var(--push-white)]/30 text-[var(--push-white)] hover:bg-[var(--push-white)]/10 transition-colors"
               >
                 For Creators
-              </a>
-              <a
-                href="/wallet"
-                className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium border border-[var(--push-white)]/30 text-[var(--push-white)]/90 hover:text-[var(--push-white)] hover:bg-[var(--push-white)]/10 transition-colors"
-              >
-                Connect Push Wallet
-              </a>
+              </Link>
             </div>
           </div>
         </div>

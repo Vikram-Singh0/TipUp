@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import CoinLoader from "@/components/ui/coin-loader";
 import {
   PushUniversalWalletProvider,
   PushUniversalAccountButton,
@@ -16,10 +14,6 @@ import {
 } from "@pushchain/ui-kit";
 import { ethers } from "ethers";
 import { CONTRACT_CONFIG } from "@/config/contract";
-
-const Coin3D = dynamic(() => import("@/components/pushflow/coin-3d"), {
-  ssr: false,
-});
 
 // TipUp Contract ABI (enhanced with new fields)
 const TIPUP_ABI = [
@@ -31,23 +25,6 @@ const TIPUP_ABI = [
   "function isCreatorRegisteredByAddress(address _address) external view returns (bool)",
   "event TipSent(string indexed ensName, address indexed from, address indexed to, uint256 amount, string message, uint256 timestamp)",
 ];
-
-interface Creator {
-  wallet: string;
-  ensName: string;
-  totalTips: bigint;
-  tipCount: bigint;
-  isRegistered: boolean;
-  profileMessage: string;
-  registrationTime: bigint;
-  displayName: string;
-  avatarUrl: string;
-  websiteUrl: string;
-  twitterHandle: string;
-  instagramHandle: string;
-  discordHandle: string;
-  youtubeHandle: string;
-}
 
 interface CreatorContractResponse {
   wallet: string;
@@ -67,15 +44,9 @@ interface CreatorContractResponse {
 }
 
 export default function UniversalTipPage() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [userAddress, setUserAddress] = useState<string>("");
-  const [creator, setCreator] = useState<Creator | null>(null);
-  const [tipAmount, setTipAmount] = useState("");
-  const [tipMessage, setTipMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   // Universal tip link input
   const [tipLink, setTipLink] = useState("");
@@ -88,53 +59,6 @@ export default function UniversalTipPage() {
   const walletConfig = {
     network: PushUI.CONSTANTS.PUSH_NETWORK.TESTNET,
   };
-
-  // Quick tip amounts
-  const quickAmounts = ["0.001", "0.005", "0.01", "0.05", "0.1"];
-
-  // Check wallet connection status
-  useEffect(() => {
-    const checkWalletConnection = async () => {
-      try {
-        if (window.ethereum) {
-          const accounts = (await window.ethereum.request({
-            method: "eth_accounts",
-          })) as string[];
-          if (accounts.length > 0) {
-            setIsConnected(true);
-            setUserAddress(accounts[0]);
-          } else {
-            setIsConnected(false);
-            setUserAddress("");
-          }
-        }
-      } catch (error) {
-        console.error("Error checking wallet connection:", error);
-      }
-    };
-
-    checkWalletConnection();
-
-    // Listen for account changes
-    if (window.ethereum) {
-      window.ethereum.on("accountsChanged", (...args: unknown[]) => {
-        const accounts = args[0] as string[];
-        if (accounts.length > 0) {
-          setIsConnected(true);
-          setUserAddress(accounts[0]);
-        } else {
-          setIsConnected(false);
-          setUserAddress("");
-        }
-      });
-    }
-
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener("accountsChanged", () => {});
-      }
-    };
-  }, []);
 
   const parseCreatorInfo = (input: string): { type: string; value: string } => {
     const inputValue = input as string;
@@ -170,7 +94,6 @@ export default function UniversalTipPage() {
 
     setIsSearching(true);
     setError("");
-    setCreator(null);
 
     try {
       const provider = new ethers.JsonRpcProvider(pushRpcUrl);
@@ -202,25 +125,9 @@ export default function UniversalTipPage() {
       }
 
       if (isRegistered && creatorData) {
-        setCreator({
-          wallet: creatorData.wallet,
-          ensName: creatorData.ensName,
-          totalTips: creatorData.totalTips,
-          tipCount: creatorData.tipCount,
-          isRegistered: creatorData.isRegistered,
-          profileMessage: creatorData.profileMessage,
-          registrationTime: creatorData.registrationTime,
-          displayName: creatorData.displayName || creatorData.ensName,
-          avatarUrl: creatorData.avatarUrl || "",
-          websiteUrl: creatorData.websiteUrl || "",
-          twitterHandle: creatorData.twitterHandle || "",
-          instagramHandle: creatorData.instagramHandle || "",
-          discordHandle: creatorData.discordHandle || "",
-          youtubeHandle: creatorData.youtubeHandle || "",
-        });
-        setSuccess(
-          `✅ Found creator: ${creatorData.displayName || creatorData.ensName}`
-        );
+        // Redirect to the individual creator page
+        const creatorEnsName = creatorData.ensName;
+        router.push(`/tip/${creatorEnsName}`);
       } else {
         setError("Creator not found. Make sure they are registered on TipUp.");
       }
@@ -230,123 +137,6 @@ export default function UniversalTipPage() {
     } finally {
       setIsSearching(false);
     }
-  };
-
-  const handleTip = async () => {
-    if (!tipAmount || !isConnected || !userAddress || !creator) {
-      setError(
-        "Please connect your wallet, find a creator, and enter a tip amount"
-      );
-      return;
-    }
-
-    if (parseFloat(tipAmount) <= 0) {
-      setError("Please enter a valid tip amount");
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      if (!window.ethereum) {
-        throw new Error("MetaMask or another Web3 wallet is required");
-      }
-
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(contractAddress, TIPUP_ABI, signer);
-
-      const tipAmountWei = ethers.parseEther(tipAmount);
-
-      // Send the tip transaction using ENS name
-      const tx = await contract.tip(creator.ensName, tipMessage, {
-        value: tipAmountWei,
-      });
-
-      setSuccess(`Tip transaction sent! Hash: ${tx.hash}`);
-
-      // Wait for confirmation
-      await tx.wait();
-
-      setSuccess(
-        `✅ Tip sent successfully! ${tipAmount} ETH sent to ${creator.displayName}`
-      );
-
-      // Clear form
-      setTipAmount("");
-      setTipMessage("");
-
-      // Refresh creator info
-      await searchCreator();
-
-      // Send Push notification (mock for now)
-      showPushNotification(
-        `You sent ${tipAmount} ETH to ${creator.displayName}!`
-      );
-    } catch (error: unknown) {
-      console.error("Error sending tip:", error);
-      setError(error instanceof Error ? error.message : "Failed to send tip");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const showPushNotification = (message: string) => {
-    // Mock Push notification - in real implementation, this would use Push SDK
-    if ("Notification" in window && Notification.permission === "granted") {
-      new Notification("TipUp Notification", {
-        body: message,
-        icon: "/pushchain-logo.png",
-      });
-    } else {
-      alert(`Push Notification: ${message}`);
-    }
-  };
-
-  const requestNotificationPermission = async () => {
-    if ("Notification" in window && Notification.permission === "default") {
-      await Notification.requestPermission();
-    }
-  };
-
-  useEffect(() => {
-    requestNotificationPermission();
-  }, []);
-
-  const getSocialLinks = () => {
-    if (!creator) return [];
-
-    const links = [];
-    if (creator.websiteUrl)
-      links.push({ name: "Website", url: creator.websiteUrl, icon: "🌐" });
-    if (creator.twitterHandle)
-      links.push({
-        name: "Twitter",
-        url: `https://twitter.com/${creator.twitterHandle}`,
-        icon: "🐦",
-      });
-    if (creator.instagramHandle)
-      links.push({
-        name: "Instagram",
-        url: `https://instagram.com/${creator.instagramHandle}`,
-        icon: "📸",
-      });
-    if (creator.discordHandle)
-      links.push({
-        name: "Discord",
-        url: `https://discord.com/users/${creator.discordHandle}`,
-        icon: "💬",
-      });
-    if (creator.youtubeHandle)
-      links.push({
-        name: "YouTube",
-        url: `https://youtube.com/@${creator.youtubeHandle}`,
-        icon: "📺",
-      });
-
-    return links;
   };
 
   return (
@@ -393,6 +183,11 @@ export default function UniversalTipPage() {
                   placeholder="Paste here..."
                   value={tipLink}
                   onChange={(e) => setTipLink(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isSearching && tipLink.trim()) {
+                      searchCreator();
+                    }
+                  }}
                   className="flex-1 h-12 text-center"
                 />
                 <Button
@@ -402,7 +197,7 @@ export default function UniversalTipPage() {
                 >
                   {isSearching ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                      <CoinLoader size={16} className="mr-2" />
                       Searching...
                     </>
                   ) : (
@@ -477,184 +272,23 @@ export default function UniversalTipPage() {
           </CardContent>
         </Card>
 
-        {/* Creator Profile */}
-        {creator && (
-          <Card className="bg-card/50 backdrop-blur">
-            <CardHeader>
-              <CardTitle>Creator Profile</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-start gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage
-                    src={creator.avatarUrl}
-                    alt={creator.displayName}
-                  />
-                  <AvatarFallback>
-                    {creator.displayName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-
-                <div className="flex-1 space-y-2">
-                  <div>
-                    <h3 className="text-xl font-semibold">
-                      {creator.displayName}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {creator.ensName}
-                    </p>
-                  </div>
-
-                  {creator.profileMessage && (
-                    <p className="text-sm">{creator.profileMessage}</p>
-                  )}
-
-                  {/* Social Links */}
-                  {getSocialLinks().length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {getSocialLinks().map((link, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="cursor-pointer"
-                        >
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1"
-                          >
-                            <span>{link.icon}</span>
-                            <span>{link.name}</span>
-                          </a>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Stats */}
-                  <div className="flex gap-6 text-sm">
-                    <div>
-                      <span className="font-semibold text-[var(--push-pink-500)]">
-                        {ethers.formatEther(creator.totalTips)} ETH
-                      </span>
-                      <span className="text-muted-foreground ml-1">raised</span>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-[var(--push-purple-500)]">
-                        {creator.tipCount.toString()}
-                      </span>
-                      <span className="text-muted-foreground ml-1">
-                        supporters
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        {/* Status Messages */}
+        {error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="text-red-600 text-sm text-center">❌ {error}</div>
             </CardContent>
           </Card>
         )}
-
-        {/* Tipping Interface */}
-        {creator && (
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="rounded-3xl bg-[radial-gradient(60%_60%_at_50%_40%,var(--push-pink-500)/20,transparent)] p-4">
-              <Coin3D scale={0.9} />
-            </div>
-
-            <Card className="bg-card/50 backdrop-blur">
-              <CardHeader>
-                <CardTitle>Send a Tip to {creator.displayName}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Quick Amount Buttons */}
-                <div className="space-y-2">
-                  <Label>Quick Amounts (ETH)</Label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {quickAmounts.map((amount) => (
-                      <Button
-                        key={amount}
-                        variant={tipAmount === amount ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setTipAmount(amount)}
-                        className={
-                          tipAmount === amount
-                            ? "bg-[var(--push-pink-500)]"
-                            : ""
-                        }
-                      >
-                        {amount}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Custom Amount Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Custom Amount (ETH)</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="0.01"
-                    step="0.001"
-                    min="0"
-                    value={tipAmount}
-                    onChange={(e) => setTipAmount(e.target.value)}
-                    className="text-center"
-                  />
-                </div>
-
-                {/* Message Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message (Optional)</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Leave a nice message for the creator..."
-                    maxLength={280}
-                    value={tipMessage}
-                    onChange={(e) => setTipMessage(e.target.value)}
-                    rows={3}
-                  />
-                  <div className="text-xs text-muted-foreground text-right">
-                    {tipMessage.length}/280 characters
-                  </div>
-                </div>
-
-                {/* Send Tip Button */}
-                <Button
-                  className="w-full bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]"
-                  onClick={handleTip}
-                  disabled={
-                    !isConnected ||
-                    !tipAmount ||
-                    isLoading ||
-                    parseFloat(tipAmount) <= 0
-                  }
-                >
-                  {isLoading
-                    ? "Sending..."
-                    : `Send ${tipAmount || "0"} ETH Tip`}
-                </Button>
-
-                {/* Status Messages */}
-                {error && (
-                  <div className="text-red-500 text-sm text-center p-2 bg-red-50 rounded">
-                    {error}
-                  </div>
-                )}
-                {success && (
-                  <div className="text-green-500 text-sm text-center p-2 bg-green-50 rounded">
-                    {success}
-                  </div>
-                )}
-
-                <p className="text-xs text-muted-foreground text-center">
-                  Powered by Push Chain • Instant notifications • No platform
-                  fees
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+        {isSearching && (
+          <Card className="border-pink-200 bg-pink-50">
+            <CardContent className="pt-6">
+              <div className="text-pink-600 text-sm text-center flex items-center justify-center gap-3">
+                <CoinLoader size={24} />
+                Searching for creator, please wait...
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Network Info */}

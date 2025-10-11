@@ -490,36 +490,36 @@ export default function Page() {
             </div>
           </Link>
 
-          <Link href="/broadcast" className="group">
+          <Link href="/dashboard" className="group">
             <div className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur p-5 h-full">
               <motion.h3
                 className="text-base font-semibold mb-1"
                 whileHover={{ y: -2 }}
               >
-                Broadcast Channel
+                Creator Dashboard
               </motion.h3>
               <p className="text-sm text-muted-foreground">
-                Push notifications for your fans
+                Manage your profile and track tips
               </p>
               <div className="mt-4 text-xs text-[var(--push-pink-500)] group-hover:underline">
-                View Broadcasts →
+                Go to Dashboard →
               </div>
             </div>
           </Link>
 
-          <Link href="/wallet" className="group">
+          <Link href="/tip/universal" className="group">
             <div className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur p-5 h-full">
               <motion.h3
                 className="text-base font-semibold mb-1"
                 whileHover={{ y: -2 }}
               >
-                Push Wallet
+                Find Creators
               </motion.h3>
               <p className="text-sm text-muted-foreground">
-                Universal App – all chains enabled
+                Search and discover creators to support
               </p>
               <div className="mt-4 text-xs text-[var(--push-pink-500)] group-hover:underline">
-                Connect Wallet →
+                Search Creators →
               </div>
             </div>
           </Link>
