@@ -50,7 +50,7 @@ export function CustomLoader() {
           />
           <div className="relative p-4 rounded-xl bg-background/50 backdrop-blur-sm border border-border/20">
             <Image
-              src="/TipUp-logo-final.png"
+              src="/TipUp-large-logo.png"
               alt="TipUp Logo"
               width={64}
               height={64}

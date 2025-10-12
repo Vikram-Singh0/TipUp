@@ -83,10 +83,10 @@ export default function Page() {
             >
               <div className="relative">
                 <Image
-                  src="/TipUp-logo-final.png"
+                  src="/TipUp-large-logo.png"
                   alt="TipUp Logo"
-                  width={32}
-                  height={32}
+                  width={52}
+                  height={52}
                   className="rounded-lg"
                 />
                 <motion.div
@@ -597,8 +597,8 @@ export default function Page() {
             Trusted by Creators Worldwide
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Join thousands of creators who are already earning more with TipUp&apos;s
-            seamless tipping experience.
+            Join thousands of creators who are already earning more with
+            TipUp&apos;s seamless tipping experience.
           </p>
         </motion.div>
 
