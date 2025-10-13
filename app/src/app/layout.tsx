@@ -7,6 +7,7 @@ import "./globals.css";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Suspense } from "react";
 import { LoadingProvider } from "@/components/providers/loading-provider";
+import { PushChainProviders } from "@/providers/PushChainProviders";
 
 export const metadata: Metadata = {
   title: "TipUp",
@@ -33,7 +34,9 @@ export default function RootLayout({
             disableTransitionOnChange
             storageKey="pushflow-theme"
           >
-            <LoadingProvider>{children}</LoadingProvider>
+            <PushChainProviders>
+              <LoadingProvider>{children}</LoadingProvider>
+            </PushChainProviders>
           </NextThemesProvider>
         </Suspense>
         <Analytics />

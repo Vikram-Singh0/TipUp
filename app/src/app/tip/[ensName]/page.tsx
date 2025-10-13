@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
-  PushUniversalWalletProvider,
   PushUniversalAccountButton,
-  PushUI,
+  usePushWalletContext,
+  usePushChainClient,
 } from "@pushchain/ui-kit";
 import { ethers } from "ethers";
 import Link from "next/link";
@@ -36,8 +36,11 @@ export default function TipCreatorPage() {
   const params = useParams();
   const ensName = params?.ensName as string;
 
-  const [isConnected, setIsConnected] = useState(false);
-  const [userAddress, setUserAddress] = useState<string>("");
+  const { connectionStatus } = usePushWalletContext();
+  const { pushChainClient } = usePushChainClient();
+
+  const isConnected = connectionStatus === "connected";
+  const userAddress = pushChainClient?.universal?.account || "";
   const [creator, setCreator] = useState<Creator | null>(null);
   const [tipAmount, setTipAmount] = useState("");
   const [tipMessage, setTipMessage] = useState("");
@@ -50,57 +53,8 @@ export default function TipCreatorPage() {
   const contractAddress = CONTRACT_CONFIG.TIPUP_CONTRACT;
   const pushRpcUrl = CONTRACT_CONFIG.PUSH_RPC_URL;
 
-  // Wallet configuration
-  const walletConfig = {
-    network: PushUI.CONSTANTS.PUSH_NETWORK.TESTNET,
-  };
-
   // Quick tip amounts
   const quickAmounts = ["0.001", "0.005", "0.01", "0.05", "0.1"];
-
-  // Check wallet connection status
-  useEffect(() => {
-    const checkWalletConnection = async () => {
-      try {
-        if (window.ethereum) {
-          const accounts = (await window.ethereum.request({
-            method: "eth_accounts",
-          })) as string[];
-          if (accounts.length > 0) {
-            setIsConnected(true);
-            setUserAddress(accounts[0]);
-          } else {
-            setIsConnected(false);
-            setUserAddress("");
-          }
-        }
-      } catch (error) {
-        console.error("Error checking wallet connection:", error);
-      }
-    };
-
-    checkWalletConnection();
-
-    // Listen for account changes
-    if (window.ethereum) {
-      window.ethereum.on("accountsChanged", (...args: unknown[]) => {
-        const accounts = args[0] as string[];
-        if (accounts.length > 0) {
-          setIsConnected(true);
-          setUserAddress(accounts[0]);
-        } else {
-          setIsConnected(false);
-          setUserAddress("");
-        }
-      });
-    }
-
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener("accountsChanged", () => {});
-      }
-    };
-  }, []);
 
   const fetchCreatorInfo = useCallback(async () => {
     try {
@@ -165,19 +119,23 @@ export default function TipCreatorPage() {
     setSuccess("");
 
     try {
-      if (!window.ethereum) {
-        throw new Error("MetaMask or another Web3 wallet is required");
+      if (!pushChainClient) {
+        throw new Error("Push Chain client not initialized");
       }
-
-      // Get the provider from Push Wallet
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(contractAddress, TIPUP_ABI, signer);
 
       const tipAmountWei = ethers.parseEther(tipAmount);
 
-      // Send the tip transaction
-      const tx = await contract.tip(ensName, tipMessage, {
+      // Create contract interface to encode the function call
+      const contractInterface = new ethers.Interface(TIPUP_ABI);
+      const encodedData = contractInterface.encodeFunctionData("tip", [
+        ensName,
+        tipMessage,
+      ]);
+
+      // Send the tip transaction using Push Chain Universal Transaction
+      const tx = await pushChainClient.universal.sendTransaction({
+        to: contractAddress as `0x${string}`,
+        data: encodedData as `0x${string}`,
         value: tipAmountWei,
       });
 
@@ -297,250 +255,246 @@ export default function TipCreatorPage() {
   }
 
   return (
-    <PushUniversalWalletProvider config={walletConfig}>
-      <main className="mx-auto max-w-4xl px-4 py-10 space-y-8">
-        <header className="space-y-4">
-          {creator && (
-            <div className="flex items-center space-x-4">
-              {creator.avatarUrl ? (
-                <Image
-                  src={creator.avatarUrl}
-                  alt={creator.displayName}
-                  width={64}
-                  height={64}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-[var(--push-pink-500)]"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] flex items-center justify-center text-white text-xl font-bold">
-                  {creator.displayName.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div>
-                <h1 className="text-3xl md:text-4xl font-semibold">
-                  {creator.displayName}
-                </h1>
-                <p className="text-muted-foreground">@{ensName}</p>
-              </div>
-            </div>
-          )}
-
-          {!creator && (
-            <h1 className="text-3xl md:text-4xl font-semibold">
-              Tip @{ensName}
-            </h1>
-          )}
-
-          <p className="text-muted-foreground">
-            {creator?.profileMessage ||
-              "Support your favorite creator in seconds."}
-          </p>
-
-          {/* Social Links */}
-          {creator &&
-            (creator.websiteUrl ||
-              creator.twitterHandle ||
-              creator.instagramHandle ||
-              creator.youtubeHandle ||
-              creator.discordHandle) && (
-              <div className="flex flex-wrap gap-2">
-                {creator.websiteUrl && (
-                  <a
-                    href={creator.websiteUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-card/50 text-sm hover:bg-card transition-colors"
-                  >
-                    <Globe className="w-3 h-3" />
-                    Website
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
-                {creator.twitterHandle && (
-                  <a
-                    href={getSocialUrl(creator.twitterHandle, "twitter")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-card/50 text-sm hover:bg-card transition-colors"
-                  >
-                    <Twitter className="w-3 h-3" />
-                    {formatSocialHandle(creator.twitterHandle, "twitter")}
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
-                {creator.instagramHandle && (
-                  <a
-                    href={getSocialUrl(creator.instagramHandle, "instagram")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-card/50 text-sm hover:bg-card transition-colors"
-                  >
-                    <Instagram className="w-3 h-3" />
-                    {formatSocialHandle(creator.instagramHandle, "instagram")}
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
-                {creator.youtubeHandle && (
-                  <a
-                    href={getSocialUrl(creator.youtubeHandle, "youtube")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-card/50 text-sm hover:bg-card transition-colors"
-                  >
-                    <Youtube className="w-3 h-3" />
-                    {formatSocialHandle(creator.youtubeHandle, "youtube")}
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
-                {creator.discordHandle && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-card/50 text-sm">
-                    <MessageSquare className="w-3 h-3" />
-                    {formatSocialHandle(creator.discordHandle, "discord")}
-                  </span>
-                )}
+    <main className="mx-auto max-w-4xl px-4 py-10 space-y-8">
+      <header className="space-y-4">
+        {creator && (
+          <div className="flex items-center space-x-4">
+            {creator.avatarUrl ? (
+              <Image
+                src={creator.avatarUrl}
+                alt={creator.displayName}
+                width={64}
+                height={64}
+                className="w-16 h-16 rounded-full object-cover border-2 border-[var(--push-pink-500)]"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] flex items-center justify-center text-white text-xl font-bold">
+                {creator.displayName.charAt(0).toUpperCase()}
               </div>
             )}
-        </header>
-
-        {/* Wallet Connection */}
-        <div className="flex justify-center">
-          <PushUniversalAccountButton />
-        </div>
-
-        {/* Creator Stats */}
-        {creator && (
-          <Card className="bg-card/50 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="text-center">Creator Stats</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-[var(--push-pink-500)]">
-                    {ethers.formatEther(creator.totalTips)}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Total Tips (ETH)
-                  </div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-[var(--push-purple-500)]">
-                    {creator.tipCount.toString()}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Tip Count</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-semibold">
+                {creator.displayName}
+              </h1>
+              <p className="text-muted-foreground">@{ensName}</p>
+            </div>
+          </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-8 items-center">
-          <div className="rounded-3xl bg-[radial-gradient(60%_60%_at_50%_40%,var(--push-pink-500)/20,transparent)] p-4">
-            <Coin3D scale={0.9} />
-          </div>
+        {!creator && (
+          <h1 className="text-3xl md:text-4xl font-semibold">Tip @{ensName}</h1>
+        )}
 
-          <Card className="bg-card/50 backdrop-blur">
-            <CardHeader>
-              <CardTitle>Send a Tip</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Quick Amount Buttons */}
-              <div className="space-y-2">
-                <Label>Quick Amounts (ETH)</Label>
-                <div className="grid grid-cols-5 gap-2">
-                  {quickAmounts.map((amount) => (
-                    <Button
-                      key={amount}
-                      variant={tipAmount === amount ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setTipAmount(amount)}
-                      className={
-                        tipAmount === amount ? "bg-[var(--push-pink-500)]" : ""
-                      }
-                    >
-                      {amount}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+        <p className="text-muted-foreground">
+          {creator?.profileMessage ||
+            "Support your favorite creator in seconds."}
+        </p>
 
-              {/* Custom Amount Input */}
-              <div className="space-y-2">
-                <Label htmlFor="amount">Custom Amount (ETH)</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="0.01"
-                  step="0.001"
-                  min="0"
-                  value={tipAmount}
-                  onChange={(e) => setTipAmount(e.target.value)}
-                  className="text-center"
-                />
-              </div>
-
-              {/* Message Input */}
-              <div className="space-y-2">
-                <Label htmlFor="message">Message (Optional)</Label>
-                <Textarea
-                  id="message"
-                  placeholder="Leave a nice message for the creator..."
-                  maxLength={280}
-                  value={tipMessage}
-                  onChange={(e) => setTipMessage(e.target.value)}
-                  rows={3}
-                />
-                <div className="text-xs text-muted-foreground text-right">
-                  {tipMessage.length}/280 characters
-                </div>
-              </div>
-
-              {/* Send Tip Button */}
-              <Button
-                className="w-full bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]"
-                onClick={handleTip}
-                disabled={
-                  !isConnected ||
-                  !tipAmount ||
-                  isLoading ||
-                  parseFloat(tipAmount) <= 0
-                }
-              >
-                {isLoading ? "Sending..." : `Send ${tipAmount || "0"} ETH Tip`}
-              </Button>
-
-              {/* Status Messages */}
-              {error && (
-                <div className="text-red-500 text-sm text-center p-2 bg-red-50 rounded">
-                  {error}
-                </div>
+        {/* Social Links */}
+        {creator &&
+          (creator.websiteUrl ||
+            creator.twitterHandle ||
+            creator.instagramHandle ||
+            creator.youtubeHandle ||
+            creator.discordHandle) && (
+            <div className="flex flex-wrap gap-2">
+              {creator.websiteUrl && (
+                <a
+                  href={creator.websiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-card/50 text-sm hover:bg-card transition-colors"
+                >
+                  <Globe className="w-3 h-3" />
+                  Website
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               )}
-              {success && (
-                <div className="text-green-500 text-sm text-center p-2 bg-green-50 rounded">
-                  {success}
-                </div>
+              {creator.twitterHandle && (
+                <a
+                  href={getSocialUrl(creator.twitterHandle, "twitter")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-card/50 text-sm hover:bg-card transition-colors"
+                >
+                  <Twitter className="w-3 h-3" />
+                  {formatSocialHandle(creator.twitterHandle, "twitter")}
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               )}
+              {creator.instagramHandle && (
+                <a
+                  href={getSocialUrl(creator.instagramHandle, "instagram")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-card/50 text-sm hover:bg-card transition-colors"
+                >
+                  <Instagram className="w-3 h-3" />
+                  {formatSocialHandle(creator.instagramHandle, "instagram")}
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              {creator.youtubeHandle && (
+                <a
+                  href={getSocialUrl(creator.youtubeHandle, "youtube")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-card/50 text-sm hover:bg-card transition-colors"
+                >
+                  <Youtube className="w-3 h-3" />
+                  {formatSocialHandle(creator.youtubeHandle, "youtube")}
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              {creator.discordHandle && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-card/50 text-sm">
+                  <MessageSquare className="w-3 h-3" />
+                  {formatSocialHandle(creator.discordHandle, "discord")}
+                </span>
+              )}
+            </div>
+          )}
+      </header>
 
-              <p className="text-xs text-muted-foreground text-center">
-                Powered by Push Chain • Instant notifications • No platform fees
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Wallet Connection */}
+      <div className="flex justify-center">
+        <PushUniversalAccountButton />
+      </div>
 
-        {/* Network Info */}
-        <Card className="bg-card/30 backdrop-blur">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-2">
-              <div className="text-sm font-medium">
-                Network: Push Chain Testnet
+      {/* Creator Stats */}
+      {creator && (
+        <Card className="bg-card/50 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="text-center">Creator Stats</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-[var(--push-pink-500)]">
+                  {ethers.formatEther(creator.totalTips)}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Total Tips (ETH)
+                </div>
               </div>
-              <div className="text-xs text-muted-foreground">
-                Chain ID: 999 • Fast & Low-cost transactions
+              <div>
+                <div className="text-2xl font-bold text-[var(--push-purple-500)]">
+                  {creator.tipCount.toString()}
+                </div>
+                <div className="text-sm text-muted-foreground">Tip Count</div>
               </div>
             </div>
           </CardContent>
         </Card>
-      </main>
-    </PushUniversalWalletProvider>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-8 items-center">
+        <div className="rounded-3xl bg-[radial-gradient(60%_60%_at_50%_40%,var(--push-pink-500)/20,transparent)] p-4">
+          <Coin3D scale={0.9} />
+        </div>
+
+        <Card className="bg-card/50 backdrop-blur">
+          <CardHeader>
+            <CardTitle>Send a Tip</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Quick Amount Buttons */}
+            <div className="space-y-2">
+              <Label>Quick Amounts (ETH)</Label>
+              <div className="grid grid-cols-5 gap-2">
+                {quickAmounts.map((amount) => (
+                  <Button
+                    key={amount}
+                    variant={tipAmount === amount ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTipAmount(amount)}
+                    className={
+                      tipAmount === amount ? "bg-[var(--push-pink-500)]" : ""
+                    }
+                  >
+                    {amount}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Amount Input */}
+            <div className="space-y-2">
+              <Label htmlFor="amount">Custom Amount (ETH)</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="0.01"
+                step="0.001"
+                min="0"
+                value={tipAmount}
+                onChange={(e) => setTipAmount(e.target.value)}
+                className="text-center"
+              />
+            </div>
+
+            {/* Message Input */}
+            <div className="space-y-2">
+              <Label htmlFor="message">Message (Optional)</Label>
+              <Textarea
+                id="message"
+                placeholder="Leave a nice message for the creator..."
+                maxLength={280}
+                value={tipMessage}
+                onChange={(e) => setTipMessage(e.target.value)}
+                rows={3}
+              />
+              <div className="text-xs text-muted-foreground text-right">
+                {tipMessage.length}/280 characters
+              </div>
+            </div>
+
+            {/* Send Tip Button */}
+            <Button
+              className="w-full bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]"
+              onClick={handleTip}
+              disabled={
+                !isConnected ||
+                !tipAmount ||
+                isLoading ||
+                parseFloat(tipAmount) <= 0
+              }
+            >
+              {isLoading ? "Sending..." : `Send ${tipAmount || "0"} ETH Tip`}
+            </Button>
+
+            {/* Status Messages */}
+            {error && (
+              <div className="text-red-500 text-sm text-center p-2 bg-red-50 rounded">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="text-green-500 text-sm text-center p-2 bg-green-50 rounded">
+                {success}
+              </div>
+            )}
+
+            <p className="text-xs text-muted-foreground text-center">
+              Powered by Push Chain • Instant notifications • No platform fees
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Network Info */}
+      <Card className="bg-card/30 backdrop-blur">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-2">
+            <div className="text-sm font-medium">
+              Network: Push Chain Testnet
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Chain ID: 42101 • Fast & Low-cost transactions
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </main>
   );
 }

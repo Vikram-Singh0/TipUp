@@ -12,11 +12,7 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Footer } from "@/components/pushflow/footer";
 import Image from "next/image";
-import {
-  PushUniversalWalletProvider,
-  PushUniversalAccountButton,
-  PushUI,
-} from "@pushchain/ui-kit";
+import { PushUniversalAccountButton } from "@pushchain/ui-kit";
 
 const Coin3DLogo = dynamic(() => import("@/components/pushflow/coin-3d-logo"), {
   ssr: false,
@@ -24,11 +20,6 @@ const Coin3DLogo = dynamic(() => import("@/components/pushflow/coin-3d-logo"), {
 });
 
 export default function Page() {
-  // Define Wallet Config
-  const walletConfig = {
-    network: PushUI.CONSTANTS.PUSH_NETWORK.TESTNET,
-  };
-
   const { scrollY } = useScroll();
   const headerOpacity = useTransform(scrollY, [0, 100], [0.8, 0.95]);
 
@@ -72,7 +63,7 @@ export default function Page() {
       {/* Push.org-style navbar */}
       <motion.header
         className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-6xl"
-        style={{ opacity: headerOpacity }}
+        style={{ opacity: headerOpacity.get() }}
       >
         <div className="mx-6 backdrop-blur-md bg-background/80 border border-border/40 rounded-2xl px-6 py-4 shadow-2xl shadow-[var(--push-pink-500)]/5">
           <div className="flex items-center justify-between">
@@ -111,9 +102,7 @@ export default function Page() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <PushUniversalWalletProvider config={walletConfig}>
-                  <PushUniversalAccountButton />
-                </PushUniversalWalletProvider>
+                <PushUniversalAccountButton />
               </motion.div>
               <ThemeToggle />
             </div>
@@ -159,7 +148,7 @@ export default function Page() {
               transition={{ duration: 0.8, delay: 0.4 }}
             >
               Powered by Push Chain and Push Wallet. A universal tipping
-              experience with real-time Push notifications that makes supporting
+              experience that makes supporting
               creators effortless and instant.
             </motion.p>
           </div>
@@ -450,7 +439,7 @@ export default function Page() {
 
         {/* Feature Links grid */}
         <motion.div
-          className="grid md:grid-cols-4 gap-4"
+          className="grid md:grid-cols-3 gap-4"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -507,22 +496,6 @@ export default function Page() {
             </div>
           </Link>
 
-          <Link href="/wallet" className="group">
-            <div className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur p-5 h-full">
-              <motion.h3
-                className="text-base font-semibold mb-1"
-                whileHover={{ y: -2 }}
-              >
-                Push Wallet
-              </motion.h3>
-              <p className="text-sm text-muted-foreground">
-                Universal App – all chains enabled
-              </p>
-              <div className="mt-4 text-xs text-[var(--push-pink-500)] group-hover:underline">
-                Connect Wallet →
-              </div>
-            </div>
-          </Link>
         </motion.div>
       </section>
 

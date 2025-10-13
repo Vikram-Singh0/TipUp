@@ -113,7 +113,7 @@ Visit `http://localhost:3000` to see the app.
 ### Push Chain Testnet
 
 - **RPC URL**: `https://rpc.push.org`
-- **Chain ID**: `999`
+- **Chain ID**: `42101`
 - **Currency**: ETH
 - **Block Explorer**: [Push Chain Explorer](https://explorer.push.org)
 
