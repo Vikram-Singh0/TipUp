@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,8 @@ export default function UniversalTipPage() {
   // Universal tip link input
   const [tipLink, setTipLink] = useState("");
 
+  const router = useRouter();
+
   // Contract configuration
   const contractAddress = CONTRACT_CONFIG.TIPUP_CONTRACT;
   const pushRpcUrl = CONTRACT_CONFIG.PUSH_RPC_URL;
@@ -123,7 +126,18 @@ export default function UniversalTipPage() {
         provider
       );
 
-      const { type, value } = parseCreatorInfo(tipLink.trim());
+      const { type, value: rawValue } = parseCreatorInfo(tipLink.trim());
+      // sanitize value (remove surrounding slashes)
+      const value = rawValue.replace(/^\/+|\/+$/g, "");
+
+      // If input was an ENS (or full tip link that resolves to an ENS),
+      // always redirect to the canonical /tip/[ensname] page so that the
+      // dedicated page can handle found/not-found states and fetching.
+      if (type === "ens") {
+        router.push(`/tip/${value}`);
+        setIsSearching(false);
+        return;
+      }
 
       let isRegistered = false;
       let creatorData: CreatorContractResponse | null = null;
@@ -134,6 +148,13 @@ export default function UniversalTipPage() {
           creatorData = (await contract.getCreatorByAddress(
             value
           )) as CreatorContractResponse;
+        }
+
+        // If we found a creator by address, redirect to their ENS page
+        if (isRegistered && creatorData && creatorData.ensName) {
+          router.push(`/tip/${creatorData.ensName}`);
+          setIsSearching(false);
+          return;
         }
       } else {
         isRegistered = await contract.isCreatorRegistered(value);

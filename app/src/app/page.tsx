@@ -83,8 +83,8 @@ export default function Page() {
                   <Image
                     src="/TipUp-large-logo.png"
                     alt="TipUp Logo"
-                    width={52}
-                    height={52}
+                    width={56}
+                    height={56}
                     className="rounded-lg"
                   />
                   <motion.div
@@ -100,7 +100,7 @@ export default function Page() {
                     }}
                   />
                 </div>
-                <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] bg-clip-text text-transparent">
+                <span className="font-bold text-lg tracking-tight bg-white bg-clip-text text-transparent">
                   TipUp
                 </span>
               </motion.div>
