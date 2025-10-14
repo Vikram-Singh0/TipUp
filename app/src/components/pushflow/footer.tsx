@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export function Footer() {
@@ -30,31 +29,15 @@ export function Footer() {
                   href="/dashboard"
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
-                  Dashboard
+                  Creator Dashboard
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/tip"
+                  href="/tip/universal"
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
-                  Send Tips
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/broadcast"
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Broadcasts
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/wallet"
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Push Wallet
+                  Universal Tipping
                 </Link>
               </li>
             </ul>
@@ -101,18 +84,10 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-12 pt-8 border-t border-border">
+        <div className="flex flex-col md:flex-row items-center justify-center mt-12 pt-8 border-t border-border">
           <p className="text-sm text-muted-foreground">
             © 2025 TipUp. Built on Push Chain
           </p>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/terms">Terms</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/privacy">Privacy</Link>
-            </Button>
-          </div>
         </div>
       </div>
     </footer>

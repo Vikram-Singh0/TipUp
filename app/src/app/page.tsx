@@ -451,7 +451,7 @@ export default function Page() {
 
           {/* Feature Links grid */}
           <motion.div
-            className="grid md:grid-cols-3 gap-4"
+            className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -466,7 +466,7 @@ export default function Page() {
                   Creator Dashboard
                 </motion.h3>
                 <p className="text-sm text-muted-foreground">
-                  Manage profile, tips, broadcasts
+                  Manage your profile, view tips and analytics
                 </p>
                 <div className="mt-4 text-xs text-[var(--push-pink-500)] group-hover:underline">
                   Open Dashboard →
@@ -487,23 +487,6 @@ export default function Page() {
                 </p>
                 <div className="mt-4 text-xs text-[var(--push-pink-500)] group-hover:underline">
                   Start Tipping →
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/broadcast" className="group">
-              <div className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur p-5 h-full">
-                <motion.h3
-                  className="text-base font-semibold mb-1"
-                  whileHover={{ y: -2 }}
-                >
-                  Broadcast Channel
-                </motion.h3>
-                <p className="text-sm text-muted-foreground">
-                  Push notifications for your fans
-                </p>
-                <div className="mt-4 text-xs text-[var(--push-pink-500)] group-hover:underline">
-                  View Broadcasts →
                 </div>
               </div>
             </Link>
