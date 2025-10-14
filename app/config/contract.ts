@@ -2,8 +2,7 @@
 export const CONTRACT_CONFIG = {
   // Replace with your deployed contract address
   TIPUP_CONTRACT:
-    process.env.NEXT_PUBLIC_TIPUP_CONTRACT ||
-    "0x85a243E0C6705561596BAd748B4d0AD08177620e",
+    "0x7FC99Cb7aAbFEb0A54117fDdFd4eAAE05b17880f",
 
   // Push Chain Configuration
   PUSH_RPC_URL:
