@@ -10,8 +10,13 @@ import { LoadingProvider } from "@/components/providers/loading-provider";
 import { PushChainProviders } from "@/providers/PushChainProviders";
 
 export const metadata: Metadata = {
-  title: "TipUp",
+  title: "TipUp💸",
   description: "Tip creators instantly on any chain",
+  icons: {
+    icon: "/TipUp-large-logo.png",
+    shortcut: "/TipUp-large-logo.png",
+    apple: "/TipUp-large-logo.png",
+  },
 };
 
 export default function RootLayout({
