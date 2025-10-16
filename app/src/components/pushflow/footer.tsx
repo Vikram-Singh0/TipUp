@@ -1,16 +1,20 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function Footer() {
   return (
     <footer className="w-full border-t border-border mt-16">
-      <div className="container mx-auto px-12 py-8">
+      <div className="container mx-auto px-12 py-8 pb-0">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="space-y-4 md:col-span-2">
             <div className="flex items-center gap-3">
-              <div
-                className="size-8 rounded-md bg-[var(--push-pink-500)]"
-                aria-hidden
+              <Image
+                src="/TipUp-large-logo.png"
+                alt="TipUp Logo"
+                width={32}
+                height={32}
+                className="rounded-md"
               />
               <span className="font-semibold tracking-tight">TipUp</span>
             </div>
@@ -83,11 +87,29 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-center mt-12 pt-8 border-t border-border">
-          <p className="text-sm text-muted-foreground">
-            © 2025 TipUp. Built on Push Chain
-          </p>
+        {/* Bottom Bar with Background Image */}
+        <div className="mt-12 pt-8 border-t border-border">
+          {/* Credits Above Image */}
+          <div className="flex flex-col md:flex-row items-center justify-center py-4">
+            <p className="text-base md:text-lg font-semibold text-foreground">
+              © 2025 TipUp. Built on Push Chain
+            </p>
+          </div>
+
+          {/* Image Container with 10% bottom trim - No bottom spacing */}
+          <div className="relative overflow-hidden min-h-[360px] md:min-h-[450px] -mb-8">
+            <div
+              className="absolute inset-0 opacity-90"
+              style={{
+                backgroundImage:
+                  "url(/Gemini_Generated_Image_8otyk28otyk28oty.png)",
+                backgroundSize: "contain",
+                backgroundPosition: "center top",
+                backgroundRepeat: "no-repeat",
+                clipPath: "inset(0 0 10% 0)",
+              }}
+            />
+          </div>
         </div>
       </div>
     </footer>
