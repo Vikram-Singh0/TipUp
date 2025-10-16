@@ -4,7 +4,7 @@ import Image from "next/image";
 export function Footer() {
   return (
     <footer className="w-full border-t border-border mt-16">
-      <div className="container mx-auto px-12 py-8 pb-0">
+      <div className="container mx-auto px-12 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="space-y-4 md:col-span-2">
@@ -86,30 +86,28 @@ export function Footer() {
             </ul>
           </div>
         </div>
+      </div>
 
-        {/* Bottom Bar with Background Image */}
-        <div className="mt-12 pt-8 border-t border-border">
-          {/* Credits Above Image */}
-          <div className="flex flex-col md:flex-row items-center justify-center py-4">
-            <p className="text-base md:text-lg font-semibold text-foreground">
-              © 2025 TipUp. Built on Push Chain
-            </p>
-          </div>
+      {/* Bottom Bar with Background Image - Full width, no padding */}
+      <div className="mt-12 pt-8 border-t border-border">
+        {/* Credits Above Image */}
+        <div className="flex flex-col md:flex-row items-center justify-center py-4">
+          <p className="text-base md:text-lg font-semibold text-foreground">
+            © 2025 TipUp. Built on Push Chain
+          </p>
+        </div>
 
-          {/* Image Container with 10% bottom trim - No bottom spacing */}
-          <div className="relative overflow-hidden min-h-[360px] md:min-h-[450px] -mb-8">
-            <div
-              className="absolute inset-0 opacity-90"
-              style={{
-                backgroundImage:
-                  "url(/Gemini_Generated_Image_8otyk28otyk28oty.png)",
-                backgroundSize: "contain",
-                backgroundPosition: "center top",
-                backgroundRepeat: "no-repeat",
-                clipPath: "inset(0 0 10% 0)",
-              }}
-            />
-          </div>
+        {/* Image Container - Full width with no side or bottom padding */}
+        <div className="relative overflow-hidden min-h-[360px] md:min-h-[450px] w-full">
+          <div
+            className="absolute inset-0 opacity-90"
+            style={{
+              backgroundImage: "url(/TipUp-footer-final.png)",
+              backgroundSize: "contain",
+              backgroundPosition: "center top",
+              backgroundRepeat: "no-repeat",
+            }}
+          />
         </div>
       </div>
     </footer>
