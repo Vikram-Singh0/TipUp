@@ -31,6 +31,8 @@ interface CreatorRegistrationFormProps {
   isLoading: boolean;
   error: string;
   success: string;
+  initialData?: Partial<CreatorFormData>;
+  isEditing?: boolean;
 }
 
 export interface CreatorFormData {
@@ -50,17 +52,19 @@ export default function CreatorRegistrationForm({
   isLoading,
   error,
   success,
+  initialData,
+  isEditing = false,
 }: CreatorRegistrationFormProps) {
   const [formData, setFormData] = useState<CreatorFormData>({
-    ensName: "",
-    displayName: "",
-    profileMessage: "",
-    avatarUrl: "",
-    websiteUrl: "",
-    twitterHandle: "",
-    instagramHandle: "",
-    youtubeHandle: "",
-    discordHandle: "",
+    ensName: initialData?.ensName || "",
+    displayName: initialData?.displayName || "",
+    profileMessage: initialData?.profileMessage || "",
+    avatarUrl: initialData?.avatarUrl || "",
+    websiteUrl: initialData?.websiteUrl || "",
+    twitterHandle: initialData?.twitterHandle || "",
+    instagramHandle: initialData?.instagramHandle || "",
+    youtubeHandle: initialData?.youtubeHandle || "",
+    discordHandle: initialData?.discordHandle || "",
   });
 
   const [validationErrors, setValidationErrors] = useState<
@@ -203,12 +207,13 @@ export default function CreatorRegistrationForm({
             value={formData.ensName}
             onChange={(e) => handleInputChange("ensName", e.target.value)}
             className={validationErrors.ensName ? "border-red-500" : ""}
+            disabled={isEditing}
           />
           {validationErrors.ensName && (
             <p className="text-sm text-red-500">{validationErrors.ensName}</p>
           )}
           <p className="text-xs text-muted-foreground">
-            This will be your unique identifier and tip link
+            {isEditing ? "ENS name cannot be changed" : "This will be your unique identifier and tip link"}
           </p>
         </div>
 
@@ -415,7 +420,7 @@ export default function CreatorRegistrationForm({
       <CardHeader className="text-center">
         <CardTitle className="flex items-center justify-center gap-2">
           <Sparkles className="w-5 h-5 text-[var(--push-pink-500)]" />
-          Create Your Creator Profile
+          {isEditing ? "Edit Your Creator Profile" : "Create Your Creator Profile"}
         </CardTitle>
         <div className="space-y-2">
           <Progress value={getCompletionPercentage()} className="w-full" />
@@ -474,7 +479,9 @@ export default function CreatorRegistrationForm({
               disabled={isLoading || !isStepValid(1) || !isStepValid(2)}
               className="bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] hover:from-[var(--push-pink-600)] hover:to-[var(--push-purple-600)]"
             >
-              {isLoading ? "Creating Profile..." : "Create Profile"}
+              {isLoading 
+                ? (isEditing ? "Updating Profile..." : "Creating Profile...") 
+                : (isEditing ? "Update Profile" : "Create Profile")}
             </Button>
           )}
         </div>

@@ -84,6 +84,8 @@ export default function DashboardPage() {
 
     try {
       setIsCreatorLoading(true);
+      setError("");
+      
       const provider = new ethers.JsonRpcProvider(pushRpcUrl);
       const contract = new ethers.Contract(
         contractAddress,
@@ -91,19 +93,12 @@ export default function DashboardPage() {
         provider
       );
 
-      console.log(
-        "Checking if creator is registered for address:",
-        userAddress
-      );
       const isRegistered = await contract.isCreatorRegisteredByAddress(
         userAddress
       );
 
-      console.log("Is registered:", isRegistered);
-
       if (isRegistered) {
         const creatorData = await contract.getCreatorByAddress(userAddress);
-        console.log("Creator data:", creatorData);
 
         const creatorInfo: Creator = {
           wallet: creatorData.wallet,
@@ -129,7 +124,6 @@ export default function DashboardPage() {
         setQrCodeUrl(qrCode);
       } else {
         setCreator(null);
-        console.log("Creator not registered, showing registration form");
       }
     } catch (error) {
       console.error("Error fetching creator info:", error);
@@ -175,20 +169,41 @@ export default function DashboardPage() {
       return;
     }
 
+    if (!pushChainClient) {
+      setError("Wallet client not initialized. Please reconnect your wallet.");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
     setSuccess("");
 
     try {
-      if (!window.ethereum) {
-        throw new Error("MetaMask or another Web3 wallet is required");
+      // Check if already registered to prevent duplicate registration
+      const provider = new ethers.JsonRpcProvider(pushRpcUrl);
+      const readContract = new ethers.Contract(
+        contractAddress,
+        TIPUP_ABI,
+        provider
+      );
+      
+      const alreadyRegistered = await readContract.isCreatorRegisteredByAddress(userAddress);
+      if (alreadyRegistered) {
+        setError("This wallet is already registered as a creator.");
+        await fetchCreatorInfo();
+        return;
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(contractAddress, TIPUP_ABI, signer);
+      // Check if ENS name is already taken
+      const ensNameTaken = await readContract.isCreatorRegistered(formData.ensName);
+      if (ensNameTaken) {
+        setError(`The ENS name "${formData.ensName}" is already taken. Please choose another one.`);
+        return;
+      }
 
-      const tx = await contract.registerCreator(
+      // Encode the function call
+      const contract = new ethers.Interface(TIPUP_ABI);
+      const data = contract.encodeFunctionData("registerCreator", [
         formData.ensName,
         formData.displayName,
         formData.profileMessage,
@@ -197,21 +212,76 @@ export default function DashboardPage() {
         formData.twitterHandle,
         formData.instagramHandle,
         formData.youtubeHandle,
-        formData.discordHandle
-      );
+        formData.discordHandle,
+      ]);
 
-      setSuccess(`Registration transaction sent! Hash: ${tx.hash}`);
+      // Send transaction using pushChainClient
+      const tx = await pushChainClient.universal.sendTransaction({
+        to: contractAddress as `0x${string}`,
+        data: data as `0x${string}`,
+        value: BigInt(0),
+      });
+      
+      setSuccess(`Registration transaction sent! Please wait...`);
 
-      await tx.wait();
-      setSuccess(`✅ Successfully registered as ${formData.ensName}!`);
+      // Wait for transaction to be processed
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      
+      // Check if transaction succeeded
+      try {
+        const txHashStr = typeof tx === 'object' && 'hash' in tx ? String(tx.hash) : String(tx);
+        const receipt = await provider.getTransactionReceipt(txHashStr);
+        
+        if (receipt && receipt.status === 0) {
+          throw new Error("Transaction was reverted. The ENS name or wallet may already be registered.");
+        }
+      } catch (receiptError) {
+        console.warn("Could not verify transaction:", receiptError);
+      }
+      
+      // Wait for registration to be confirmed
+      let confirmed = false;
+      let attempts = 0;
+      const maxAttempts = 10;
 
-      // Refresh creator info
-      await fetchCreatorInfo();
+      while (!confirmed && attempts < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        attempts++;
+        
+        try {
+          const isNowRegistered = await readContract.isCreatorRegisteredByAddress(userAddress);
+          if (isNowRegistered) {
+            confirmed = true;
+          }
+        } catch {
+          // Retry on error
+        }
+      }
+
+      if (confirmed) {
+        setSuccess(`Successfully registered as ${formData.ensName}!`);
+        await fetchCreatorInfo();
+      } else {
+        setError("Registration is taking longer than expected. Please refresh the page in a moment.");
+        setTimeout(() => fetchCreatorInfo(), 5000);
+      }
     } catch (error: unknown) {
       console.error("Error registering creator:", error);
-      setError(
-        error instanceof Error ? error.message : "Failed to register creator"
-      );
+      
+      let errorMessage = "Failed to register creator";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        if (errorMessage.includes("user rejected")) {
+          errorMessage = "Transaction was rejected.";
+        } else if (errorMessage.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds for gas.";
+        } else if (errorMessage.includes("already registered")) {
+          errorMessage = "This wallet or ENS name is already registered.";
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -223,20 +293,19 @@ export default function DashboardPage() {
       return;
     }
 
+    if (!pushChainClient) {
+      setError("Wallet client not initialized. Please reconnect your wallet.");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
     setSuccess("");
 
     try {
-      if (!window.ethereum) {
-        throw new Error("MetaMask or another Web3 wallet is required");
-      }
-
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(contractAddress, TIPUP_ABI, signer);
-
-      const tx = await contract.updateCreatorProfile(
+      // Encode the function call
+      const contract = new ethers.Interface(TIPUP_ABI);
+      const data = contract.encodeFunctionData("updateCreatorProfile", [
         formData.displayName,
         formData.profileMessage,
         formData.avatarUrl,
@@ -244,22 +313,41 @@ export default function DashboardPage() {
         formData.twitterHandle,
         formData.instagramHandle,
         formData.youtubeHandle,
-        formData.discordHandle
-      );
+        formData.discordHandle,
+      ]);
 
-      setSuccess(`Profile update transaction sent! Hash: ${tx.hash}`);
+      // Send transaction using pushChainClient
+      await pushChainClient.universal.sendTransaction({
+        to: contractAddress as `0x${string}`,
+        data: data as `0x${string}`,
+        value: BigInt(0),
+      });
 
-      await tx.wait();
-      setSuccess(`✅ Successfully updated profile!`);
+      setSuccess("Profile update transaction sent!");
+
+      // Wait for transaction confirmation
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      
+      setSuccess("Successfully updated profile!");
       setIsEditing(false);
 
       // Refresh creator info
       await fetchCreatorInfo();
     } catch (error: unknown) {
       console.error("Error updating creator:", error);
-      setError(
-        error instanceof Error ? error.message : "Failed to update profile"
-      );
+      
+      let errorMessage = "Failed to update profile";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        if (errorMessage.includes("user rejected")) {
+          errorMessage = "Transaction was rejected.";
+        } else if (errorMessage.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds for gas.";
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -338,7 +426,7 @@ export default function DashboardPage() {
             success={success}
           />
         </div>
-      ) : isEditing ? (
+      ) : isEditing && creator ? (
         // Edit Profile Form
         <div className="max-w-2xl mx-auto">
           <CreatorRegistrationForm
@@ -346,6 +434,18 @@ export default function DashboardPage() {
             isLoading={isLoading}
             error={error}
             success={success}
+            isEditing={true}
+            initialData={{
+              ensName: creator.ensName,
+              displayName: creator.displayName,
+              profileMessage: creator.profileMessage,
+              avatarUrl: creator.avatarUrl,
+              websiteUrl: creator.websiteUrl,
+              twitterHandle: creator.twitterHandle,
+              instagramHandle: creator.instagramHandle,
+              youtubeHandle: creator.youtubeHandle,
+              discordHandle: creator.discordHandle,
+            }}
           />
           <div className="text-center mt-4">
             <Button

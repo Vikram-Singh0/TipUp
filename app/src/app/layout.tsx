@@ -44,7 +44,11 @@ export default function RootLayout({
             </PushChainProviders>
           </NextThemesProvider>
         </Suspense>
-        <Analytics />
+        {process.env.NODE_ENV === 'production' && (
+          <Suspense fallback={null}>
+            <Analytics />
+          </Suspense>
+        )}
       </body>
     </html>
   );
