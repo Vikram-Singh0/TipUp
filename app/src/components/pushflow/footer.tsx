@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export function Footer() {
   return (
-    <footer className="w-full border-t border-border mt-16">
+    <footer className="w-full border-t border-border mt-16 pb-0">
       <div className="container mx-auto px-12 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and Description */}
@@ -97,14 +97,14 @@ export function Footer() {
           </p>
         </div>
 
-        {/* Image Container - Full width with no side or bottom padding */}
-        <div className="relative overflow-hidden min-h-[360px] md:min-h-[450px] w-full">
+        {/* Image Container - Full width with no bottom margin or padding */}
+        <div className="relative overflow-hidden w-full -mb-8 md:-mb-10">
           <div
-            className="absolute inset-0 opacity-90"
+            className="w-full h-[360px] md:h-[450px]"
             style={{
               backgroundImage: "url(/TipUp-footer-final.png)",
               backgroundSize: "contain",
-              backgroundPosition: "center top",
+              backgroundPosition: "center bottom",
               backgroundRepeat: "no-repeat",
             }}
           />
