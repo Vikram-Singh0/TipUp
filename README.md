@@ -7,7 +7,6 @@ A decentralized tipping dApp built on Push Chain that allows users to send tips 
 - **Universal Tipping**: Send tips to any registered creator using ENS names
 - **Push Chain Integration**: Built on Push Chain testnet for fast, low-cost transactions
 - **Push Wallet**: Seamless wallet connectivity with Push Universal Wallet
-- **Real-time Notifications**: Instant Push notifications for tip events
 - **Creator Dashboard**: Register and manage your creator profile
 - **Modern UI**: Beautiful, responsive interface with 3D animations
 
@@ -30,7 +29,7 @@ TipUp/
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 15, TypeScript, TailwindCSS v3, Framer Motion
-- **Blockchain**: Push Chain Testnet (Chain ID: 999)
+- **Blockchain**: Push Chain Testnet (Chain ID:42101 )
 - **Wallet**: Push Universal Wallet
 - **Smart Contracts**: Solidity 0.8.19, OpenZeppelin
 - **Build Tool**: Hardhat
@@ -66,7 +65,7 @@ Create a `.env.local` file in the `app/` directory:
 ```env
 NEXT_PUBLIC_TIPUP_CONTRACT=0xYourDeployedContractAddress
 NEXT_PUBLIC_PUSH_RPC_URL=https://rpc.push.org
-NEXT_PUBLIC_PUSH_CHAIN_ID=999
+NEXT_PUBLIC_PUSH_CHAIN_ID=42101
 ```
 
 ### 3. Deploy Smart Contract
