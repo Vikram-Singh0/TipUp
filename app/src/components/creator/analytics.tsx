@@ -182,7 +182,7 @@ export default function CreatorAnalytics({ tips }: CreatorAnalyticsProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Total Earned</p>
                 <p className="text-2xl font-bold text-green-500">
-                  {Number(analytics.totalAmount).toFixed(4)} ETH
+                  {Number(analytics.totalAmount).toFixed(4)} PC
                 </p>
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function CreatorAnalytics({ tips }: CreatorAnalyticsProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Average Tip</p>
                 <p className="text-2xl font-bold text-pink-500">
-                  {Number(analytics.avgAmount).toFixed(4)} ETH
+                  {Number(analytics.avgAmount).toFixed(4)} PC
                 </p>
               </div>
             </div>
@@ -241,7 +241,7 @@ export default function CreatorAnalytics({ tips }: CreatorAnalyticsProps) {
           <CardContent>
             <div className="text-2xl font-bold">{analytics.tipsToday}</div>
             <div className="text-sm text-muted-foreground">
-              {Number(analytics.amountToday).toFixed(4)} ETH
+              {Number(analytics.amountToday).toFixed(4)} PC
             </div>
           </CardContent>
         </Card>
@@ -253,7 +253,7 @@ export default function CreatorAnalytics({ tips }: CreatorAnalyticsProps) {
           <CardContent>
             <div className="text-2xl font-bold">{analytics.tipsThisWeek}</div>
             <div className="text-sm text-muted-foreground">
-              {Number(analytics.amountThisWeek).toFixed(4)} ETH
+              {Number(analytics.amountThisWeek).toFixed(4)} PC
             </div>
           </CardContent>
         </Card>
@@ -265,7 +265,7 @@ export default function CreatorAnalytics({ tips }: CreatorAnalyticsProps) {
           <CardContent>
             <div className="text-2xl font-bold">{analytics.tipsThisMonth}</div>
             <div className="text-sm text-muted-foreground">
-              {Number(analytics.amountThisMonth).toFixed(4)} ETH
+              {Number(analytics.amountThisMonth).toFixed(4)} PC
             </div>
           </CardContent>
         </Card>
@@ -306,7 +306,7 @@ export default function CreatorAnalytics({ tips }: CreatorAnalyticsProps) {
                   </div>
                   <div className="text-right">
                     <div className="font-bold">
-                      {Number(tipper.amount).toFixed(4)} ETH
+                      {Number(tipper.amount).toFixed(4)} PC
                     </div>
                   </div>
                 </div>
@@ -339,7 +339,7 @@ export default function CreatorAnalytics({ tips }: CreatorAnalyticsProps) {
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
                       <div className="font-medium">
-                        {ethers.formatEther(tip.amount)} ETH
+                        {ethers.formatEther(tip.amount)} PC
                       </div>
                       <div className="text-sm text-muted-foreground">
                         from {formatAddress(tip.from)}

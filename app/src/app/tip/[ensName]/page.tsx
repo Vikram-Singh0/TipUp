@@ -30,6 +30,8 @@ import {
   Instagram,
   Youtube,
   MessageSquare,
+  DollarSign,
+  TrendingUp,
 } from "lucide-react";
 
 export default function TipCreatorPage() {
@@ -145,7 +147,7 @@ export default function TipCreatorPage() {
       await tx.wait();
 
       setSuccess(
-        `✅ Tip sent successfully! ${tipAmount} ETH sent to ${ensName}`
+        `✅ Tip sent successfully! ${tipAmount} PC sent to ${ensName}`
       );
 
       // Clear form
@@ -156,7 +158,7 @@ export default function TipCreatorPage() {
       await fetchCreatorInfo();
 
       // Send Push notification
-      const message = `You sent ${tipAmount} ETH to ${ensName}!`;
+      const message = `You sent ${tipAmount} PC to ${ensName}!`;
       await showPushNotification(message, creator?.wallet);
     } catch (error: unknown) {
       console.error("Error sending tip:", error);
@@ -190,7 +192,7 @@ export default function TipCreatorPage() {
           await showNotification(
             {
               title: "🎉 New Tip Received!",
-              body: `You received ${tipAmount} ETH${
+              body: `You received ${tipAmount} PC${
                 tipMessage ? ` with message: "${tipMessage}"` : ""
               }`,
               cta: `${window.location.origin}/dashboard`,
@@ -202,7 +204,6 @@ export default function TipCreatorPage() {
               recipients: [creatorAddress],
             }
           );
-          console.log("Push notification sent to creator");
         } catch (pushError) {
           console.log("Push notification failed, using fallback:", pushError);
           // Fallback notification logic could go here
@@ -363,25 +364,30 @@ export default function TipCreatorPage() {
 
       {/* Creator Stats */}
       {creator && (
-        <Card className="bg-card/50 backdrop-blur">
+        <Card className="bg-gradient-to-br from-[var(--push-pink-500)]/10 via-[var(--push-purple-500)]/10 to-transparent backdrop-blur border-[var(--push-pink-500)]/20">
           <CardHeader>
-            <CardTitle className="text-center">Creator Stats</CardTitle>
+            <CardTitle className="text-center flex items-center justify-center gap-2">
+              <TrendingUp className="w-5 h-5 text-[var(--push-pink-500)]" />
+              Creator Stats
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-[var(--push-pink-500)]">
+            <div className="grid grid-cols-2 gap-6 text-center">
+              <div className="p-4 rounded-xl bg-card/50 border border-[var(--push-pink-500)]/20">
+                <div className="text-3xl font-bold text-[var(--push-pink-500)] mb-1">
                   {ethers.formatEther(creator.totalTips)}
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Total Tips (ETH)
+                <div className="text-sm text-muted-foreground font-medium">
+                  Total Tips (PC)
                 </div>
               </div>
-              <div>
-                <div className="text-2xl font-bold text-[var(--push-purple-500)]">
+              <div className="p-4 rounded-xl bg-card/50 border border-[var(--push-purple-500)]/20">
+                <div className="text-3xl font-bold text-[var(--push-purple-500)] mb-1">
                   {creator.tipCount.toString()}
                 </div>
-                <div className="text-sm text-muted-foreground">Tip Count</div>
+                <div className="text-sm text-muted-foreground font-medium">
+                  Tip Count
+                </div>
               </div>
             </div>
           </CardContent>
@@ -393,14 +399,17 @@ export default function TipCreatorPage() {
           <Coin3D scale={0.9} />
         </div>
 
-        <Card className="bg-card/50 backdrop-blur">
+        <Card className="bg-card/50 backdrop-blur-enhanced border-[var(--push-pink-500)]/30 shadow-glow-pink">
           <CardHeader>
-            <CardTitle>Send a Tip</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-[var(--push-pink-500)]" />
+              Send a Tip
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Quick Amount Buttons */}
             <div className="space-y-2">
-              <Label>Quick Amounts (ETH)</Label>
+              <Label>Quick Amounts (PC)</Label>
               <div className="grid grid-cols-5 gap-2">
                 {quickAmounts.map((amount) => (
                   <Button
@@ -420,7 +429,7 @@ export default function TipCreatorPage() {
 
             {/* Custom Amount Input */}
             <div className="space-y-2">
-              <Label htmlFor="amount">Custom Amount (ETH)</Label>
+              <Label htmlFor="amount">Custom Amount (PC)</Label>
               <Input
                 id="amount"
                 type="number"
@@ -451,7 +460,7 @@ export default function TipCreatorPage() {
 
             {/* Send Tip Button */}
             <Button
-              className="w-full bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]"
+              className="w-full bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] hover:from-[var(--push-pink-600)] hover:to-[var(--push-purple-600)] shadow-lg hover:shadow-xl transition-all duration-300 text-lg py-6"
               onClick={handleTip}
               disabled={
                 !isConnected ||
@@ -460,18 +469,20 @@ export default function TipCreatorPage() {
                 parseFloat(tipAmount) <= 0
               }
             >
-              {isLoading ? "Sending..." : `Send ${tipAmount || "0"} ETH Tip`}
+              {isLoading
+                ? "Sending... 🚀"
+                : `Send ${tipAmount || "0"} PC Tip 💝`}
             </Button>
 
             {/* Status Messages */}
             {error && (
-              <div className="text-red-500 text-sm text-center p-2 bg-red-50 rounded">
-                {error}
+              <div className="text-red-700 dark:text-red-400 text-sm text-center p-3 bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800 rounded-lg font-medium">
+                ❌ {error}
               </div>
             )}
             {success && (
-              <div className="text-green-500 text-sm text-center p-2 bg-green-50 rounded">
-                {success}
+              <div className="text-green-700 dark:text-green-400 text-sm text-center p-3 bg-green-50 dark:bg-green-950/30 border-2 border-green-200 dark:border-green-800 rounded-lg font-medium">
+                ✓ {success}
               </div>
             )}
 

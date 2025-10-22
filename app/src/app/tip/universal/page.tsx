@@ -17,6 +17,7 @@ import {
 } from "@pushchain/ui-kit";
 import { ethers } from "ethers";
 import { CONTRACT_CONFIG, TIPUP_ABI } from "@/config/contract";
+import { DollarSign } from "lucide-react";
 
 const Coin3D = dynamic(() => import("@/components/pushflow/coin-3d"), {
   ssr: false,
@@ -240,7 +241,7 @@ export default function UniversalTipPage() {
       await tx.wait();
 
       setSuccess(
-        `✅ Tip sent successfully! ${tipAmount} ETH sent to ${creator.displayName}`
+        `✅ Tip sent successfully! ${tipAmount} PC sent to ${creator.displayName}`
       );
 
       // Clear form
@@ -269,8 +270,6 @@ export default function UniversalTipPage() {
         body: message,
         icon: "/pushchain-logo.png",
       });
-    } else {
-      alert(`Push Notification: ${message}`);
     }
   };
 
@@ -501,10 +500,10 @@ export default function UniversalTipPage() {
                 )}
 
                 {/* Stats */}
-                <div className="flex gap-6 text-sm">
+                  <div className="flex gap-6 text-sm">
                   <div>
                     <span className="font-semibold text-[var(--push-pink-500)]">
-                      {ethers.formatEther(creator.totalTips)} ETH
+                      {ethers.formatEther(creator.totalTips)} PC
                     </span>
                     <span className="text-muted-foreground ml-1">raised</span>
                   </div>
@@ -530,14 +529,17 @@ export default function UniversalTipPage() {
             <Coin3D scale={0.9} />
           </div>
 
-          <Card className="bg-card/50 backdrop-blur">
-            <CardHeader>
-              <CardTitle>Send a Tip to {creator.displayName}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <Card className="bg-card/50 backdrop-blur-enhanced border-[var(--push-pink-500)]/30 shadow-glow-pink">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-[var(--push-pink-500)]" />
+              Send a Tip to {creator.displayName}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
               {/* Quick Amount Buttons */}
               <div className="space-y-2">
-                <Label>Quick Amounts (ETH)</Label>
+                <Label>Quick Amounts (PC)</Label>
                 <div className="grid grid-cols-5 gap-2">
                   {quickAmounts.map((amount) => (
                     <Button
@@ -557,7 +559,7 @@ export default function UniversalTipPage() {
 
               {/* Custom Amount Input */}
               <div className="space-y-2">
-                <Label htmlFor="amount">Custom Amount (ETH)</Label>
+                <Label htmlFor="amount">Custom Amount (PC)</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -588,7 +590,7 @@ export default function UniversalTipPage() {
 
               {/* Send Tip Button */}
               <Button
-                className="w-full bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]"
+                className="w-full bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] hover:from-[var(--push-pink-600)] hover:to-[var(--push-purple-600)] shadow-lg hover:shadow-xl transition-all duration-300 text-lg py-6"
                 onClick={handleTip}
                 disabled={
                   !isConnected ||
@@ -597,18 +599,18 @@ export default function UniversalTipPage() {
                   parseFloat(tipAmount) <= 0
                 }
               >
-                {isLoading ? "Sending..." : `Send ${tipAmount || "0"} ETH Tip`}
+                {isLoading ? "Sending... 🚀" : `Send ${tipAmount || "0"} PC Tip 💝`}
               </Button>
 
               {/* Status Messages */}
               {error && (
-                <div className="text-red-500 text-sm text-center p-2 bg-red-50 rounded">
-                  {error}
+                <div className="text-red-700 dark:text-red-400 text-sm text-center p-3 bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800 rounded-lg font-medium">
+                  ❌ {error}
                 </div>
               )}
               {success && (
-                <div className="text-green-500 text-sm text-center p-2 bg-green-50 rounded">
-                  {success}
+                <div className="text-green-700 dark:text-green-400 text-sm text-center p-3 bg-green-50 dark:bg-green-950/30 border-2 border-green-200 dark:border-green-800 rounded-lg font-medium">
+                  ✓ {success}
                 </div>
               )}
 

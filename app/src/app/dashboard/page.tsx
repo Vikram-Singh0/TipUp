@@ -151,7 +151,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (userAddress && isConnected && !walletLoading) {
-      console.log("Wallet connected, fetching creator info for:", userAddress);
       fetchCreatorInfo();
       fetchUserTips();
     }
@@ -547,28 +546,32 @@ export default function DashboardPage() {
 
               {/* Stats Grid */}
               <div className="grid md:grid-cols-3 gap-4">
-                <Card className="bg-card/50 backdrop-blur">
+                <Card className="bg-gradient-to-br from-[var(--push-pink-500)]/10 to-[var(--push-pink-500)]/5 backdrop-blur border-[var(--push-pink-500)]/20 hover:border-[var(--push-pink-500)]/40 transition-all duration-300">
                   <CardContent className="pt-6">
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="w-5 h-5 text-[var(--push-pink-500)]" />
+                    <div className="flex items-center space-x-3">
+                      <div className="p-3 rounded-xl bg-[var(--push-pink-500)]/10">
+                        <DollarSign className="w-6 h-6 text-[var(--push-pink-500)]" />
+                      </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground font-medium">
                           Total Tips
                         </p>
                         <p className="text-2xl font-bold text-[var(--push-pink-500)]">
-                          {ethers.formatEther(creator.totalTips)} ETH
+                          {ethers.formatEther(creator.totalTips)} PC
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-card/50 backdrop-blur">
+                <Card className="bg-gradient-to-br from-[var(--push-purple-500)]/10 to-[var(--push-purple-500)]/5 backdrop-blur border-[var(--push-purple-500)]/20 hover:border-[var(--push-purple-500)]/40 transition-all duration-300">
                   <CardContent className="pt-6">
-                    <div className="flex items-center space-x-2">
-                      <Users className="w-5 h-5 text-[var(--push-purple-500)]" />
+                    <div className="flex items-center space-x-3">
+                      <div className="p-3 rounded-xl bg-[var(--push-purple-500)]/10">
+                        <Users className="w-6 h-6 text-[var(--push-purple-500)]" />
+                      </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground font-medium">
                           Supporters
                         </p>
                         <p className="text-2xl font-bold text-[var(--push-purple-500)]">
@@ -579,12 +582,14 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-card/50 backdrop-blur">
+                <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 backdrop-blur border-green-500/20 hover:border-green-500/40 transition-all duration-300">
                   <CardContent className="pt-6">
-                    <div className="flex items-center space-x-2">
-                      <TrendingUp className="w-5 h-5 text-green-500" />
+                    <div className="flex items-center space-x-3">
+                      <div className="p-3 rounded-xl bg-green-500/10">
+                        <TrendingUp className="w-6 h-6 text-green-500" />
+                      </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Avg Tip</p>
+                        <p className="text-sm text-muted-foreground font-medium">Avg Tip</p>
                         <p className="text-2xl font-bold text-green-500">
                           {creator.tipCount > 0
                             ? Number(
@@ -593,7 +598,7 @@ export default function DashboardPage() {
                                 )
                               ).toFixed(4)
                             : "0"}{" "}
-                          ETH
+                          PC
                         </p>
                       </div>
                     </div>
@@ -791,9 +796,9 @@ export default function DashboardPage() {
                         <div key={index} className="border rounded-lg p-3">
                           <div className="flex justify-between items-start">
                             <div>
-                              <div className="font-medium">
-                                {ethers.formatEther(tip.amount)} ETH
-                              </div>
+                            <div className="font-medium">
+                              {ethers.formatEther(tip.amount)} PC
+                            </div>
                               <div className="text-sm text-muted-foreground">
                                 From: {formatAddress(tip.from)}
                               </div>
@@ -893,13 +898,13 @@ export default function DashboardPage() {
       {(error || success) && (
         <div className="fixed bottom-4 right-4 z-50 space-y-2">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg shadow-lg">
-              {error}
+            <div className="bg-red-50 dark:bg-red-950/80 border-2 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-6 py-3 rounded-xl shadow-2xl backdrop-blur font-medium">
+              ❌ {error}
             </div>
           )}
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-lg shadow-lg">
-              {success}
+            <div className="bg-green-50 dark:bg-green-950/80 border-2 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-6 py-3 rounded-xl shadow-2xl backdrop-blur font-medium">
+              ✓ {success}
             </div>
           )}
         </div>

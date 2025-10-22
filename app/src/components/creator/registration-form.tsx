@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
+
 import { Badge } from "@/components/ui/badge";
 import {
   validateDisplayName,
@@ -213,7 +213,9 @@ export default function CreatorRegistrationForm({
             <p className="text-sm text-red-500">{validationErrors.ensName}</p>
           )}
           <p className="text-xs text-muted-foreground">
-            {isEditing ? "ENS name cannot be changed" : "This will be your unique identifier and tip link"}
+            {isEditing
+              ? "ENS name cannot be changed"
+              : "This will be your unique identifier and tip link"}
           </p>
         </div>
 
@@ -416,36 +418,91 @@ export default function CreatorRegistrationForm({
   );
 
   return (
-    <Card className="bg-card/50 backdrop-blur border-border/60">
+    <Card className="bg-card/50 backdrop-blur-enhanced border-[var(--push-pink-500)]/20 shadow-glow-pink">
       <CardHeader className="text-center">
-        <CardTitle className="flex items-center justify-center gap-2">
-          <Sparkles className="w-5 h-5 text-[var(--push-pink-500)]" />
-          {isEditing ? "Edit Your Creator Profile" : "Create Your Creator Profile"}
+        <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+          <Sparkles className="w-6 h-6 text-[var(--push-pink-500)]" />
+          {isEditing
+            ? "Edit Your Creator Profile"
+            : "Create Your Creator Profile"}
         </CardTitle>
-        <div className="space-y-2">
-          <Progress value={getCompletionPercentage()} className="w-full" />
-          <p className="text-sm text-muted-foreground">
-            Step {currentStep} of {totalSteps} • {getCompletionPercentage()}%
-            Complete
+        <div className="space-y-3">
+          {/* Enhanced Progress Bar */}
+          <div className="relative w-full h-3 bg-card/50 rounded-full overflow-hidden border border-border/50">
+            <div
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[var(--push-pink-500)] via-[var(--push-purple-500)] to-[var(--push-pink-500)] rounded-full transition-all duration-500 ease-out"
+              style={{
+                width: `${getCompletionPercentage()}%`,
+                backgroundSize: "200% 100%",
+                animation: "gradient-slide 3s ease-in-out infinite",
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+            </div>
+          </div>
+          <p className="text-sm font-medium">
+            <span className="text-[var(--push-pink-500)]">
+              Step {currentStep}
+            </span>
+            <span className="text-muted-foreground"> of {totalSteps}</span>
+            <span className="mx-2">•</span>
+            <span className="text-[var(--push-purple-500)]">
+              {getCompletionPercentage()}% Complete
+            </span>
           </p>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Step Indicators */}
-        <div className="flex justify-center space-x-4">
-          {[1, 2, 3].map((step) => (
-            <div
-              key={step}
-              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-                step === currentStep
-                  ? "bg-[var(--push-pink-500)] text-white"
-                  : step < currentStep
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200 text-gray-500"
-              }`}
-            >
-              {step < currentStep ? "✓" : step}
+        {/* Enhanced Step Indicators */}
+        <div className="flex justify-center items-center space-x-3">
+          {[
+            { num: 1, icon: User, label: "Basic" },
+            { num: 2, icon: Mail, label: "Profile" },
+            { num: 3, icon: Globe, label: "Social" },
+          ].map((step, index) => (
+            <div key={step.num} className="flex items-center">
+              {/* Step Circle */}
+              <div className="relative">
+                <div
+                  className={`flex flex-col items-center justify-center w-16 h-16 rounded-full text-sm font-bold transition-all duration-500 ${
+                    step.num === currentStep
+                      ? "bg-gradient-to-br from-[var(--push-pink-500)] to-[var(--push-purple-500)] text-white shadow-lg scale-110 animate-pulse-glow"
+                      : step.num < currentStep
+                      ? "bg-gradient-to-br from-green-400 to-green-600 text-white shadow-md scale-105"
+                      : "bg-card/50 border-2 border-dashed border-border text-muted-foreground scale-95"
+                  }`}
+                >
+                  {step.num < currentStep ? (
+                    <div className="flex flex-col items-center">
+                      <span className="text-2xl">✓</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1">
+                      <step.icon className="w-5 h-5" />
+                      <span className="text-xs font-semibold">
+                        {step.label}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {/* Animated Ring for Current Step */}
+                {step.num === currentStep && (
+                  <div className="absolute inset-0 rounded-full border-2 border-[var(--push-pink-500)] animate-ping opacity-75"></div>
+                )}
+              </div>
+
+              {/* Connector Line */}
+              {index < 2 && (
+                <div className="relative mx-2 w-12 h-1">
+                  <div className="absolute inset-0 bg-border rounded-full"></div>
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] rounded-full transition-all duration-500 ${
+                      step.num < currentStep ? "w-full" : "w-0"
+                    }`}
+                  ></div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -469,32 +526,36 @@ export default function CreatorRegistrationForm({
             <Button
               onClick={handleNext}
               disabled={!isStepValid(currentStep)}
-              className="bg-[var(--push-pink-500)] hover:bg-[var(--push-pink-600)]"
+              className="bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] hover:from-[var(--push-pink-600)] hover:to-[var(--push-purple-600)] shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              Next
+              Next →
             </Button>
           ) : (
             <Button
               onClick={handleSubmit}
               disabled={isLoading || !isStepValid(1) || !isStepValid(2)}
-              className="bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] hover:from-[var(--push-pink-600)] hover:to-[var(--push-purple-600)]"
+              className="bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] hover:from-[var(--push-pink-600)] hover:to-[var(--push-purple-600)] shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              {isLoading 
-                ? (isEditing ? "Updating Profile..." : "Creating Profile...") 
-                : (isEditing ? "Update Profile" : "Create Profile")}
+              {isLoading
+                ? isEditing
+                  ? "Updating Profile..."
+                  : "Creating Profile..."
+                : isEditing
+                ? "✓ Update Profile"
+                : "✓ Create Profile"}
             </Button>
           )}
         </div>
 
         {/* Status Messages */}
         {error && (
-          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-            {error}
+          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm font-medium">
+            ❌ {error}
           </div>
         )}
         {success && (
-          <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
-            {success}
+          <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border-2 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-sm font-medium">
+            ✓ {success}
           </div>
         )}
 
