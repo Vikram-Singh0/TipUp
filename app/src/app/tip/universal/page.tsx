@@ -339,13 +339,13 @@ export default function UniversalTipPage() {
       </div>
 
       {/* Creator Search */}
-      <Card className="bg-card/50 backdrop-blur border-[var(--push-purple-500)]/20">
-        <CardHeader className="text-center">
-          <CardTitle className="flex items-center justify-center gap-2">
-            <span className="text-2xl">🔍</span>
+      <Card className="bg-card/50 backdrop-blur-md border-2 border-[var(--push-purple-500)]/30 shadow-2xl">
+        <CardHeader className="text-center pb-4">
+          <CardTitle className="flex items-center justify-center gap-3 text-2xl">
+            <span className="text-3xl">🔍</span>
             Find Creator to Tip
           </CardTitle>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-base mt-2">
             Enter any creator&apos;s information to get started
           </p>
         </CardHeader>
@@ -357,7 +357,7 @@ export default function UniversalTipPage() {
             <div className="flex gap-3">
               <Input
                 id="tipLink"
-                placeholder="tipup.app/tip/creator.eth"
+                placeholder="https://tip-up-push.vercel.app/tip/creator.eth"
                 value={tipLink}
                 onChange={(e) => setTipLink(e.target.value)}
                 onKeyDown={(e) => {
@@ -365,12 +365,12 @@ export default function UniversalTipPage() {
                     searchCreator();
                   }
                 }}
-                className="flex-1 h-12 text-base"
+                className="flex-1 h-14 text-base border-2 border-[var(--push-purple-500)]/30 focus:border-[var(--push-purple-500)] transition-colors"
               />
               <Button
                 onClick={searchCreator}
                 disabled={isSearching || !tipLink.trim()}
-                className="bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] hover:from-[var(--push-pink-600)] hover:to-[var(--push-purple-600)] h-12 px-8 font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] hover:from-[var(--push-pink-600)] hover:to-[var(--push-purple-600)] h-14 px-8 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSearching ? (
                   <>
@@ -388,38 +388,41 @@ export default function UniversalTipPage() {
           </div>
 
           {/* Example formats with copy buttons */}
-          <div className="bg-card/30 rounded-lg p-4 border border-[var(--push-purple-500)]/20">
-            <h4 className="font-medium mb-3 text-sm flex items-center gap-2">
-              ✨ Supported Formats (click to try):
+          <div className="bg-gradient-to-br from-card/40 to-card/20 rounded-xl p-5 border-2 border-[var(--push-purple-500)]/30 shadow-lg backdrop-blur-sm">
+            <h4 className="font-semibold mb-4 text-base flex items-center gap-2">
+              <span className="text-xl">✨</span>
+              Supported Formats (click to try):
             </h4>
-            <div className="grid gap-2">
+            <div className="grid gap-3">
               <button
                 onClick={() => setTipLink("https://tip-up-push.vercel.app/tip/lee.eth")}
-                className="flex items-center justify-between p-3 bg-card/50 rounded-lg hover:bg-card/80 transition-all duration-200 text-left border border-transparent hover:border-[var(--push-purple-500)]/30"
+                className="group relative flex items-center justify-between p-4 bg-gradient-to-r from-card/60 to-card/40 rounded-xl hover:from-card/90 hover:to-card/70 transition-all duration-300 text-left border-2 border-[var(--push-purple-500)]/20 hover:border-[var(--push-purple-500)]/50 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 <div className="flex-1">
-                  <div className="text-sm font-mono text-[var(--push-purple-500)]">
+                  <div className="text-sm font-mono text-[var(--push-purple-500)] font-semibold break-all">
                     https://tip-up-push.vercel.app/tip/lee.eth
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                    <span className="inline-block w-2 h-2 rounded-full bg-[var(--push-purple-500)]/50"></span>
                     Full tip link
                   </div>
                 </div>
-                <span className="text-xs text-[var(--push-purple-500)] font-semibold ml-2">
+                <span className="text-sm text-[var(--push-purple-500)] font-bold ml-3 group-hover:translate-x-1 transition-transform">
                   Try →
                 </span>
               </button>
               <button
                 onClick={() => setTipLink("creator.eth")}
-                className="flex items-center justify-between p-3 bg-card/50 rounded-lg hover:bg-card/80 transition-all duration-200 text-left border border-transparent hover:border-[var(--push-purple-500)]/30"
+                className="group relative flex items-center justify-between p-4 bg-gradient-to-r from-card/60 to-card/40 rounded-xl hover:from-card/90 hover:to-card/70 transition-all duration-300 text-left border-2 border-[var(--push-pink-500)]/20 hover:border-[var(--push-pink-500)]/50 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 <div className="flex-1">
-                  <div className="text-sm font-mono text-[var(--push-purple-500)]">creator.eth</div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-sm font-mono text-[var(--push-pink-500)] font-semibold">creator.eth</div>
+                  <div className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                    <span className="inline-block w-2 h-2 rounded-full bg-[var(--push-pink-500)]/50"></span>
                     ENS name only
                   </div>
                 </div>
-                <span className="text-xs text-[var(--push-purple-500)] font-semibold ml-2">
+                <span className="text-sm text-[var(--push-pink-500)] font-bold ml-3 group-hover:translate-x-1 transition-transform">
                   Try →
                 </span>
               </button>
@@ -427,15 +430,16 @@ export default function UniversalTipPage() {
                 onClick={() =>
                   setTipLink("0x742d35Cc6634C0532925a3b8D404fddE9C")
                 }
-                className="flex items-center justify-between p-3 bg-card/50 rounded-lg hover:bg-card/80 transition-all duration-200 text-left border border-transparent hover:border-[var(--push-purple-500)]/30"
+                className="group relative flex items-center justify-between p-4 bg-gradient-to-r from-card/60 to-card/40 rounded-xl hover:from-card/90 hover:to-card/70 transition-all duration-300 text-left border-2 border-[var(--push-purple-500)]/20 hover:border-[var(--push-purple-500)]/50 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 <div className="flex-1">
-                  <div className="text-sm font-mono text-[var(--push-purple-500)]">0x742d35Cc...</div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-sm font-mono text-[var(--push-purple-500)] font-semibold">0x742d35Cc...</div>
+                  <div className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                    <span className="inline-block w-2 h-2 rounded-full bg-[var(--push-purple-500)]/50"></span>
                     Wallet address
                   </div>
                 </div>
-                <span className="text-xs text-[var(--push-purple-500)] font-semibold ml-2">
+                <span className="text-sm text-[var(--push-purple-500)] font-bold ml-3 group-hover:translate-x-1 transition-transform">
                   Try →
                 </span>
               </button>
@@ -443,11 +447,14 @@ export default function UniversalTipPage() {
           </div>
 
           {/* Instructions */}
-          <div className="text-center text-sm text-muted-foreground">
-            <p>
-              💡 <strong>Tip:</strong> Creators can share their links via QR
-              codes, social media, or direct messages
-            </p>
+          <div className="text-center text-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-[var(--push-purple-500)]/10 to-[var(--push-pink-500)]/10 rounded-lg border border-[var(--push-purple-500)]/20">
+              <span className="text-lg">💡</span>
+              <p className="text-muted-foreground">
+                <strong className="text-foreground">Tip:</strong> Creators can share their links via QR
+                codes, social media, or direct messages
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -550,56 +550,163 @@ export default function Page() {
           </div>
         </section>
 
-        {/* Statistics Section */}
-        <section className="px-6 md:px-12 py-20 bg-gradient-to-br from-[var(--push-pink-500)]/5 to-[var(--push-purple-500)]/5">
+        {/* Creator Categories Section */}
+        <section className="px-6 md:px-12 py-28 bg-gradient-to-br from-[var(--push-pink-500)]/5 to-[var(--push-purple-500)]/5">
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-20"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Trusted by Creators Worldwide
+            <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] bg-clip-text text-transparent">
+              Creators of all kinds, all kind!
             </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Join thousands of creators who are already earning more with
-              TipUp&apos;s seamless tipping experience.
+            <p className="text-muted-foreground text-xl md:text-2xl max-w-3xl mx-auto">
+              From podcasts to cosplay, pixel art to crochet.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {[
-              { number: "10,000+", label: "Tips Processed", icon: "💰" },
-              { number: "2,500+", label: "Active Creators", icon: "🎨" },
-              { number: "95%", label: "Satisfaction Rate", icon: "⭐" },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                className="text-center p-8 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/40"
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -4, scale: 1.05 }}
-              >
-                <div className="text-4xl mb-4">{stat.icon}</div>
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] bg-clip-text text-transparent mb-2">
-                  {stat.number}
-                </div>
-                <div className="text-muted-foreground font-medium">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
+          {/* Creator Category Pills */}
+          <div className="max-w-6xl mx-auto">
+            <motion.div
+              className="flex flex-wrap justify-center items-center gap-4 md:gap-5 mb-10"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              {[
+                { icon: "🎧", label: "Streamers", highlight: true },
+                { icon: "🎨", label: "Artists" },
+                { icon: "✍️", label: "Writers" },
+                { icon: "🧵", label: "Crafters" },
+              ].map((category, index) => (
+                <motion.div
+                  key={category.label}
+                  className={`flex items-center gap-3 px-7 md:px-8 py-4 md:py-4.5 rounded-full font-semibold text-base md:text-lg transition-all duration-300 cursor-pointer ${
+                    category.highlight
+                      ? "bg-card/80 backdrop-blur-sm border-2 border-[var(--push-purple-500)]/40 shadow-lg hover:shadow-2xl hover:border-[var(--push-purple-500)]/80"
+                      : "bg-card/40 backdrop-blur-sm border border-border/30 hover:bg-card/70 hover:border-[var(--push-pink-500)]/50 hover:shadow-lg"
+                  }`}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ 
+                    scale: 1.1, 
+                    y: -6,
+                    rotate: [0, -2, 2, 0],
+                    transition: { duration: 0.3 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.span 
+                    className="text-2xl"
+                    whileHover={{ 
+                      scale: 1.2, 
+                      rotate: [0, 10, -10, 0],
+                      transition: { duration: 0.4 }
+                    }}
+                  >
+                    {category.icon}
+                  </motion.span>
+                  <span>{category.label}</span>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            <motion.div
+              className="flex flex-wrap justify-center items-center gap-4 md:gap-5 mb-10"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              viewport={{ once: true }}
+            >
+              {[
+                { icon: "🎙️", label: "Podcasters" },
+                { icon: "📹", label: "Video Creators" },
+                { icon: "🎭", label: "Cosplayers" },
+              ].map((category, index) => (
+                <motion.div
+                  key={category.label}
+                  className="flex items-center gap-3 px-7 md:px-8 py-4 md:py-4.5 rounded-full bg-card/40 backdrop-blur-sm border border-border/30 hover:bg-card/70 hover:border-[var(--push-purple-500)]/50 hover:shadow-lg font-semibold text-base md:text-lg transition-all duration-300 cursor-pointer"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ 
+                    scale: 1.1, 
+                    y: -6,
+                    rotate: [0, 2, -2, 0],
+                    transition: { duration: 0.3 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.span 
+                    className="text-2xl"
+                    whileHover={{ 
+                      scale: 1.2, 
+                      rotate: [0, -10, 10, 0],
+                      transition: { duration: 0.4 }
+                    }}
+                  >
+                    {category.icon}
+                  </motion.span>
+                  <span>{category.label}</span>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            <motion.div
+              className="flex flex-wrap justify-center items-center gap-4 md:gap-5"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              viewport={{ once: true }}
+            >
+              {[
+                { icon: "🎵", label: "Musicians" },
+                { icon: "💻", label: "Developers" },
+                { icon: "🤝", label: "Communities" },
+              ].map((category, index) => (
+                <motion.div
+                  key={category.label}
+                  className="flex items-center gap-3 px-7 md:px-8 py-4 md:py-4.5 rounded-full bg-card/40 backdrop-blur-sm border border-border/30 hover:bg-card/70 hover:border-[var(--push-pink-500)]/50 hover:shadow-lg font-semibold text-base md:text-lg transition-all duration-300 cursor-pointer"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ 
+                    scale: 1.1, 
+                    y: -6,
+                    rotate: [0, -2, 2, 0],
+                    transition: { duration: 0.3 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.span 
+                    className="text-2xl"
+                    whileHover={{ 
+                      scale: 1.2, 
+                      rotate: [0, 15, -15, 0],
+                      transition: { duration: 0.4 }
+                    }}
+                  >
+                    {category.icon}
+                  </motion.span>
+                  <span>{category.label}</span>
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
 
           {/* Testimonial */}
           <motion.div
-            className="max-w-4xl mx-auto text-center"
+            className="max-w-4xl mx-auto text-center mt-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
+            transition={{ duration: 0.8, delay: 1.0 }}
             viewport={{ once: true }}
           >
             <div className="bg-card/60 backdrop-blur-sm border border-border/40 rounded-2xl p-8 md:p-12">
@@ -610,7 +717,7 @@ export default function Page() {
                     className="text-2xl text-yellow-400"
                     initial={{ opacity: 0, scale: 0 }}
                     whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: 0.6 + i * 0.1 }}
+                    transition={{ duration: 0.3, delay: 1.1 + i * 0.1 }}
                     viewport={{ once: true }}
                   >
                     ⭐
