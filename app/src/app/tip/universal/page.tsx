@@ -84,14 +84,16 @@ export default function UniversalTipPage() {
   const quickAmounts = ["0.001", "0.005", "0.01", "0.05", "0.1"];
 
   const parseCreatorInfo = (input: string): { type: string; value: string } => {
-    const inputValue = input as string;
+    const inputValue = input.trim();
 
-    // Check if it's a full tip link (like tipup.app/tip/creator.eth)
+    // Check if it's a full tip link (like https://tip-up-push.vercel.app/tip/creator.eth or tipup.app/tip/creator.eth)
     const linkMatch = inputValue.match(
-      /(?:https?:\/\/)?(?:www\.)?(?:tipup\.app|localhost:\d+)\/tip\/(.+)/
+      /(?:https?:\/\/)?(?:www\.)?(?:tip-up-push\.vercel\.app|tipup\.app|localhost:\d+)\/tip\/(.+)/
     );
     if (linkMatch && linkMatch[1]) {
-      return { type: "ens", value: linkMatch[1] };
+      // Clean up the extracted value (remove any trailing slashes or extra path segments)
+      const cleanValue = linkMatch[1].split('/')[0].trim();
+      return { type: "ens", value: cleanValue };
     }
 
     // Check if it's an Ethereum address
@@ -127,9 +129,7 @@ export default function UniversalTipPage() {
         provider
       );
 
-      const { type, value: rawValue } = parseCreatorInfo(tipLink.trim());
-      // sanitize value (remove surrounding slashes)
-      const value = rawValue.replace(/^\/+|\/+$/g, "");
+      const { type, value } = parseCreatorInfo(tipLink.trim());
 
       // If input was an ENS (or full tip link that resolves to an ENS),
       // always redirect to the canonical /tip/[ensname] page so that the
@@ -354,64 +354,72 @@ export default function UniversalTipPage() {
             <Label htmlFor="tipLink" className="text-base font-medium">
               Creator Link, ENS Name, or Wallet Address
             </Label>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Input
                 id="tipLink"
-                placeholder="Paste here..."
+                placeholder="tipup.app/tip/creator.eth"
                 value={tipLink}
                 onChange={(e) => setTipLink(e.target.value)}
-                className="flex-1 h-12 text-center"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && tipLink.trim() && !isSearching) {
+                    searchCreator();
+                  }
+                }}
+                className="flex-1 h-12 text-base"
               />
               <Button
                 onClick={searchCreator}
                 disabled={isSearching || !tipLink.trim()}
-                className="bg-[var(--push-purple-500)] hover:bg-[var(--push-purple-600)] h-12 px-6"
+                className="bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] hover:from-[var(--push-pink-600)] hover:to-[var(--push-purple-600)] h-12 px-8 font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {isSearching ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
                     Searching...
                   </>
                 ) : (
-                  "🔍 Find Creator"
+                  <>
+                    <span className="text-lg mr-2">🔍</span>
+                    Find Creator
+                  </>
                 )}
               </Button>
             </div>
           </div>
 
           {/* Example formats with copy buttons */}
-          <div className="bg-card/30 rounded-lg p-4">
-            <h4 className="font-medium mb-3 text-sm">
+          <div className="bg-card/30 rounded-lg p-4 border border-[var(--push-purple-500)]/20">
+            <h4 className="font-medium mb-3 text-sm flex items-center gap-2">
               ✨ Supported Formats (click to try):
             </h4>
             <div className="grid gap-2">
               <button
-                onClick={() => setTipLink("tipup.app/tip/creator.eth")}
-                className="flex items-center justify-between p-2 bg-card/50 rounded hover:bg-card transition-colors text-left"
+                onClick={() => setTipLink("https://tip-up-push.vercel.app/tip/lee.eth")}
+                className="flex items-center justify-between p-3 bg-card/50 rounded-lg hover:bg-card/80 transition-all duration-200 text-left border border-transparent hover:border-[var(--push-purple-500)]/30"
               >
-                <div>
-                  <div className="text-sm font-mono">
-                    tipup.app/tip/creator.eth
+                <div className="flex-1">
+                  <div className="text-sm font-mono text-[var(--push-purple-500)]">
+                    https://tip-up-push.vercel.app/tip/lee.eth
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground mt-1">
                     Full tip link
                   </div>
                 </div>
-                <span className="text-xs text-[var(--push-purple-500)]">
+                <span className="text-xs text-[var(--push-purple-500)] font-semibold ml-2">
                   Try →
                 </span>
               </button>
               <button
                 onClick={() => setTipLink("creator.eth")}
-                className="flex items-center justify-between p-2 bg-card/50 rounded hover:bg-card transition-colors text-left"
+                className="flex items-center justify-between p-3 bg-card/50 rounded-lg hover:bg-card/80 transition-all duration-200 text-left border border-transparent hover:border-[var(--push-purple-500)]/30"
               >
-                <div>
-                  <div className="text-sm font-mono">creator.eth</div>
-                  <div className="text-xs text-muted-foreground">
+                <div className="flex-1">
+                  <div className="text-sm font-mono text-[var(--push-purple-500)]">creator.eth</div>
+                  <div className="text-xs text-muted-foreground mt-1">
                     ENS name only
                   </div>
                 </div>
-                <span className="text-xs text-[var(--push-purple-500)]">
+                <span className="text-xs text-[var(--push-purple-500)] font-semibold ml-2">
                   Try →
                 </span>
               </button>
@@ -419,15 +427,15 @@ export default function UniversalTipPage() {
                 onClick={() =>
                   setTipLink("0x742d35Cc6634C0532925a3b8D404fddE9C")
                 }
-                className="flex items-center justify-between p-2 bg-card/50 rounded hover:bg-card transition-colors text-left"
+                className="flex items-center justify-between p-3 bg-card/50 rounded-lg hover:bg-card/80 transition-all duration-200 text-left border border-transparent hover:border-[var(--push-purple-500)]/30"
               >
-                <div>
-                  <div className="text-sm font-mono">0x742d35Cc...</div>
-                  <div className="text-xs text-muted-foreground">
+                <div className="flex-1">
+                  <div className="text-sm font-mono text-[var(--push-purple-500)]">0x742d35Cc...</div>
+                  <div className="text-xs text-muted-foreground mt-1">
                     Wallet address
                   </div>
                 </div>
-                <span className="text-xs text-[var(--push-purple-500)]">
+                <span className="text-xs text-[var(--push-purple-500)] font-semibold ml-2">
                   Try →
                 </span>
               </button>
@@ -500,7 +508,7 @@ export default function UniversalTipPage() {
                 )}
 
                 {/* Stats */}
-                  <div className="flex gap-6 text-sm">
+                <div className="flex gap-6 text-sm">
                   <div>
                     <span className="font-semibold text-[var(--push-pink-500)]">
                       {ethers.formatEther(creator.totalTips)} PC
@@ -530,13 +538,13 @@ export default function UniversalTipPage() {
           </div>
 
           <Card className="bg-card/50 backdrop-blur-enhanced border-[var(--push-pink-500)]/30 shadow-glow-pink">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-[var(--push-pink-500)]" />
-              Send a Tip to {creator.displayName}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-[var(--push-pink-500)]" />
+                Send a Tip to {creator.displayName}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               {/* Quick Amount Buttons */}
               <div className="space-y-2">
                 <Label>Quick Amounts (PC)</Label>
@@ -599,7 +607,9 @@ export default function UniversalTipPage() {
                   parseFloat(tipAmount) <= 0
                 }
               >
-                {isLoading ? "Sending... 🚀" : `Send ${tipAmount || "0"} PC Tip 💝`}
+                {isLoading
+                  ? "Sending... 🚀"
+                  : `Send ${tipAmount || "0"} PC Tip 💝`}
               </Button>
 
               {/* Status Messages */}
