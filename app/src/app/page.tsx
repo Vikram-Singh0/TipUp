@@ -405,8 +405,10 @@ export default function Page() {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl font-semibold mb-4">How TipUp Works</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] bg-clip-text text-transparent">
+              How TipUp Works
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Simple, fast, and secure tipping for everyone
             </p>
           </motion.div>
