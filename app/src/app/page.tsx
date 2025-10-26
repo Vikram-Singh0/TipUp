@@ -14,6 +14,7 @@ import Image from "next/image";
 import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
 import GlassSurface from "@/components/GlassSurface";
+import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 
 const Coin3DLogo = dynamic(() => import("@/components/pushflow/coin-3d-logo"), {
   ssr: false,
@@ -703,46 +704,62 @@ export default function Page() {
             </motion.div>
           </div>
 
-          {/* Testimonial */}
+          {/* Testimonials & Reviews Section */}
           <motion.div
-            className="max-w-4xl mx-auto text-center mt-16"
+            className="mt-20 w-full flex flex-col items-center"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.0 }}
+            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <div className="bg-card/60 backdrop-blur-sm border border-border/40 rounded-2xl p-8 md:p-12">
-              <div className="flex justify-center mb-6">
-                {[...Array(5)].map((_, i) => (
-                  <motion.span
-                    key={i}
-                    className="text-2xl text-yellow-400"
-                    initial={{ opacity: 0, scale: 0 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: 1.1 + i * 0.1 }}
-                    viewport={{ once: true }}
-                  >
-                    ⭐
-                  </motion.span>
-                ))}
-              </div>
-              <blockquote className="text-xl md:text-2xl font-medium mb-6 text-foreground leading-relaxed">
-                &ldquo;TipUp has completely transformed how I connect with my
-                supporters. The instant notifications and seamless cross-chain
-                tipping make it incredibly easy for my community to show their
-                appreciation.&rdquo;
-              </blockquote>
-              <div className="flex items-center justify-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] flex items-center justify-center text-white font-bold text-lg">
-                  A
-                </div>
-                <div>
-                  <div className="font-semibold">Alex Chen</div>
-                  <div className="text-muted-foreground">
-                    Digital Artist & Creator
-                  </div>
-                </div>
-              </div>
+            <div className="text-center mb-12">
+              <h3 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[var(--push-pink-500)] to-[var(--push-purple-500)] bg-clip-text text-transparent">
+                What Creators Say
+              </h3>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                Join thousands of creators who trust TipUp for instant support
+              </p>
+            </div>
+            
+            <div className="w-full flex justify-center">
+              <InfiniteMovingCards
+              items={[
+                {
+                  quote: "TipUp has completely transformed how I connect with my supporters. The instant notifications and seamless cross-chain tipping make it incredibly easy for my community to show their appreciation.",
+                  name: "Sarah Mitchell",
+                  title: "Digital Artist & NFT Creator",
+                },
+                {
+                  quote: "As a content creator, getting paid quickly is crucial. TipUp delivers on that promise with zero hassle. My fans love how easy it is to support me!",
+                  name: "Marcus Rodriguez",
+                  title: "Twitch Streamer",
+                },
+                {
+                  quote: "The analytics dashboard helps me understand my supporters better. Plus, the QR code feature makes it super easy to share at live events!",
+                  name: "Emma Chen",
+                  title: "Musician & Performer",
+                },
+                {
+                  quote: "No platform fees means I keep more of what my supporters send. TipUp is a game-changer for independent creators like me.",
+                  name: "David Park",
+                  title: "Podcast Host",
+                },
+                {
+                  quote: "I was amazed at how simple it was to set up. Within minutes, I was receiving tips from my community. The Push Chain integration is seamless!",
+                  name: "Lisa Thompson",
+                  title: "YouTuber & Educator",
+                },
+                {
+                  quote: "Finally, a tipping platform that actually works across different blockchains. My global audience can support me without any friction!",
+                  name: "Alex Kumar",
+                  title: "Web3 Developer",
+                },
+              ]}
+              direction="left"
+              speed="slow"
+              pauseOnHover={true}
+              className="py-4"
+            />
             </div>
           </motion.div>
         </section>

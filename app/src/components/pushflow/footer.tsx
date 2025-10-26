@@ -102,7 +102,7 @@ export function Footer() {
           <div
             className="w-full h-[360px] md:h-[450px]"
             style={{
-              backgroundImage: "url(/TipUp-footer-final.png)",
+              backgroundImage: "url(/Tip-Up.png)",
               backgroundSize: "contain",
               backgroundPosition: "center bottom",
               backgroundRepeat: "no-repeat",
