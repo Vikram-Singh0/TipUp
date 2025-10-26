@@ -29,6 +29,7 @@ import {
   generateQRCode,
   copyToClipboard,
 } from "@/lib/profile-utils";
+import { Navbar } from "@/components/shared/navbar";
 
 import {
   Copy,
@@ -373,15 +374,17 @@ export default function DashboardPage() {
   };
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10 space-y-8">
-      <header className="space-y-1">
-        <h1 className="text-3xl md:text-4xl font-semibold">
-          Creator Dashboard
-        </h1>
-        <p className="text-muted-foreground">
-          Manage your profile and track your tips
-        </p>
-      </header>
+    <>
+      <Navbar />
+      <main className="mx-auto max-w-6xl px-4 pt-28 pb-10 space-y-8">
+        <header className="space-y-1">
+          <h1 className="text-3xl md:text-4xl font-semibold">
+            Creator Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Manage your profile and track your tips
+          </p>
+        </header>
       {/* Wallet Connection */}
       <div className="flex justify-center">
         <PushUniversalAccountButton />
@@ -909,19 +912,20 @@ export default function DashboardPage() {
           )}
         </div>
       )}
-      {/* Network Info */}
-      <Card className="bg-card/30 backdrop-blur">
-        <CardContent className="pt-6">
-          <div className="text-center space-y-2">
-            <div className="text-sm font-medium">
-              Network: Push Chain Testnet
+        {/* Network Info */}
+        <Card className="bg-card/30 backdrop-blur">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-2">
+              <div className="text-sm font-medium">
+                Network: Push Chain Testnet
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Chain ID: 42101 • Fast & Low-cost transactions
+              </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Chain ID: 42101 • Fast & Low-cost transactions
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </main>
+          </CardContent>
+        </Card>
+      </main>
+    </>
   );
 }

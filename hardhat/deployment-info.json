@@ -1,7 +1,7 @@
 {
-  "contractAddress": "0x7FC99Cb7aAbFEb0A54117fDdFd4eAAE05b17880f",
+  "contractAddress": "0xF354A7a2889911Ff9820ec4Ef92F2F4D8585285A",
   "network": "hardhat",
   "chainId": 42101,
-  "deploymentTime": "2025-10-13T19:50:52.592Z",
+  "deploymentTime": "2025-10-24T12:22:13.561Z",
   "contractName": "TipUp"
 }

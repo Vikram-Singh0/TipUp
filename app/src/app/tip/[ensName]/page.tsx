@@ -16,6 +16,7 @@ import {
 import { ethers } from "ethers";
 import Link from "next/link";
 import Image from "next/image";
+import { Navbar } from "@/components/shared/navbar";
 
 const Coin3D = dynamic(() => import("@/components/pushflow/coin-3d"), {
   ssr: false,
@@ -230,33 +231,38 @@ export default function TipCreatorPage() {
   // Show error if creator doesn't exist
   if (ensName && !creatorExists && creatorExists !== undefined) {
     return (
-      <main className="mx-auto max-w-4xl px-4 py-10 space-y-8">
-        <Card className="bg-card/50 backdrop-blur">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <div className="text-6xl">❌</div>
-              <h1 className="text-2xl font-semibold">Creator Not Found</h1>
-              <p className="text-muted-foreground">
-                The creator &ldquo;{ensName}&rdquo; is not registered on TipUp.
-              </p>
-              <div className="space-y-2">
-                <Button asChild>
-                  <Link href="/dashboard">Register as Creator</Link>
-                </Button>
-                <br />
-                <Button variant="outline" asChild>
-                  <Link href="/">Go Home</Link>
-                </Button>
+      <>
+        <Navbar />
+        <main className="mx-auto max-w-4xl px-4 pt-28 pb-10 space-y-8">
+          <Card className="bg-card/50 backdrop-blur">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <div className="text-6xl">❌</div>
+                <h1 className="text-2xl font-semibold">Creator Not Found</h1>
+                <p className="text-muted-foreground">
+                  The creator &ldquo;{ensName}&rdquo; is not registered on TipUp.
+                </p>
+                <div className="space-y-2">
+                  <Button asChild>
+                    <Link href="/dashboard">Register as Creator</Link>
+                  </Button>
+                  <br />
+                  <Button variant="outline" asChild>
+                    <Link href="/">Go Home</Link>
+                  </Button>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </main>
+            </CardContent>
+          </Card>
+        </main>
+      </>
     );
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10 space-y-8">
+    <>
+      <Navbar />
+      <main className="mx-auto max-w-4xl px-4 pt-28 pb-10 space-y-8">
       <header className="space-y-4">
         {creator && (
           <div className="flex items-center space-x-4">
@@ -493,19 +499,20 @@ export default function TipCreatorPage() {
         </Card>
       </div>
 
-      {/* Network Info */}
-      <Card className="bg-card/30 backdrop-blur">
-        <CardContent className="pt-6">
-          <div className="text-center space-y-2">
-            <div className="text-sm font-medium">
-              Network: Push Chain Testnet
+        {/* Network Info */}
+        <Card className="bg-card/30 backdrop-blur">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-2">
+              <div className="text-sm font-medium">
+                Network: Push Chain Testnet
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Chain ID: 42101 • Fast & Low-cost transactions
+              </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Chain ID: 42101 • Fast & Low-cost transactions
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </main>
+          </CardContent>
+        </Card>
+      </main>
+    </>
   );
 }

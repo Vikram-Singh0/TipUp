@@ -1,8 +1,7 @@
 // TipUp Contract Configuration
 export const CONTRACT_CONFIG = {
   // Replace with your deployed contract address
-  TIPUP_CONTRACT:
-    "0x7FC99Cb7aAbFEb0A54117fDdFd4eAAE05b17880f",
+  TIPUP_CONTRACT: "0xF354A7a2889911Ff9820ec4Ef92F2F4D8585285A",
 
   // Push Chain Configuration
   PUSH_RPC_URL:
